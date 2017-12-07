@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
          http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
   <responseDate>{{ "now" | date('c') }} </responseDate>
-  <request verb="Identify">http://memory.loc.gov/cgi-bin/oai</request>
+  <request verb="Identify">{{ app.request.uri }}{{ app.request.getBaseURL() }}</request>
   <Identify>
     <repositoryName>Library of Congress Open Archive Initiative 
                     Repository 1</repositoryName>
