@@ -24,6 +24,19 @@ class DefaultControllerTest extends WebTestCase
         $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
     }
 
+    public function testContentType()
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/');
+        $this->assertTrue(
+            $client->getResponse()->headers->contains(
+                'content-type',
+                'text/xml; charset=UTF-8'
+            ),
+            "Wrong or no Content-Type in response"
+        );
+    }
+
     public function testIdentifyValidatesGet()
     {
         $client = static::createClient();
