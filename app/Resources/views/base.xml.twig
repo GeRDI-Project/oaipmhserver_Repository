@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
          http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-  <responseDate>{{ "now" | date('c', 'utc') }}</responseDate>
+  <responseDate>{{ "now" | date('Y-m-d\\Th:m:s\\Z', 'utc') }}</responseDate>
   <request{% for key, param in params %} {{ key }}="{{ param }}"{% endfor %}>
     {{ app.request.uri }}{{ app.request.getBaseURL() }}
   </request>

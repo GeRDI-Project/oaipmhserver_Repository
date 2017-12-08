@@ -1,15 +1,13 @@
 {% extends 'base.xml.twig' %}
 {% block payload %}
   <Identify>
-    <repositoryName>Library of Congress Open Archive Initiative 
-                    Repository 1</repositoryName>
-    <baseURL>http://memory.loc.gov/cgi-bin/oai</baseURL>
-    <protocolVersion>2.0</protocolVersion>
-    <adminEmail>somebody@loc.gov</adminEmail>
-    <adminEmail>anybody@loc.gov</adminEmail>
-    <earliestDatestamp>1990-02-01T12:00:00Z</earliestDatestamp>
-    <deletedRecord>transient</deletedRecord>
-    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>
-    <compression>deflate</compression>
+    <repositoryName>{{ repository.name }}</repositoryName>
+    <baseURL>{{ repository.baseUrl }}</baseURL>
+    <protocolVersion>{{ repository.protocolVersion }}</protocolVersion>
+    <adminEmail>{{ repository.adminEmail }}</adminEmail>
+    <earliestDatestamp>{{ repository.earliestTimestamp | date('Y-m-d\\Th:m:s\\Z', 'utc') }}</earliestDatestamp>
+    <deletedRecord>{{ repository.deletedRecord }}</deletedRecord>
+    <granularity>{{ repository.granularity }}</granularity>
+    <compression>{{ repository.compression }}</compression>
  </Identify>
 {% endblock %}

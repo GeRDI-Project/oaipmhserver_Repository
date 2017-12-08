@@ -11,6 +11,7 @@ class DefaultController extends Controller
 {
     /**
      * @Route("/", name="oaipmh-server")
+     * @todo implement fixtures for tests
      */
     public function indexAction(Request $request)
     {
@@ -23,9 +24,13 @@ class DefaultController extends Controller
                 } else {
                     $template = 'verbs/identify.xml.twig';
                 }
+                $repository = $this->getDoctrine()
+                    ->getRepository('AppBundle:Repository')
+                    ->find(1);
                 $response->setContent(
                     $this->renderView($template, array(
-                        "params" => $params
+                        "params" => $params,
+                        "repository" => $repository,
                     ))
                 );
                 break;
