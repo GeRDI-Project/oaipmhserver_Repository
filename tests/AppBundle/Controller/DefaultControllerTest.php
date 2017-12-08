@@ -40,7 +40,7 @@ class DefaultControllerTest extends WebTestCase
     public function testIdentifyValidatesGet()
     {
         $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=identify');
+        $crawler = $client->request('GET', '/?verb=Identify');
         $xml = new DOMDocument();
         $xml->loadXML($client->getResponse()->getContent());
         $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
@@ -69,7 +69,7 @@ class DefaultControllerTest extends WebTestCase
     public function testIdentifyValidatesPost()
     {
         $this->postData = array(
-            'verb'  => "identify",
+            'verb'  => "Identify",
         );
         $client = static::createClient();
         $crawler = $client->request('GET', '/', $this->postData);

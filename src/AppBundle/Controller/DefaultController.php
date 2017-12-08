@@ -15,20 +15,45 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         $response = new Response();
-        switch (strtolower($request->query->get('verb'))) {
-            case "identify":
+        $params = $this->cleanOAIPMHkeys($request->query->all());
+        switch ($request->query->get('verb')) {
+            case "Identify":
                 $response->setContent(
-                    $this->renderView('verbs/identify.html.twig')
+                    $this->renderView('verbs/identify.html.twig', array(
+                        "params" => $params
+                    ))
                 );
                 break;
             default:
                 $response->setContent(
                     $this->renderView('errors/illegalOAIverb.html.twig', array(
-                        'base_url' => $request->getBaseUrl(),
+                        "params" => $params
                     ))
                 );
         }
         $response->headers->set("Content-Type", "text/xml");
         return $response;
+    }
+    /**
+     * @todo find suitable class for this function
+     */
+    public function cleanOAIPMHkeys(array $oaipmhkeys)
+    {
+        foreach ($oaipmhkeys as $key => $value) {
+            if ($key == "verb") {
+                switch ($value) {
+                    case "Identify":
+                    case "GetRecord":
+                    case "ListIdentifiers":
+                    case "ListMetadataFormats":
+                    case "ListRecords":
+                    case "ListSets":
+                        continue 2;
+                }
+            }
+            echo "unsetting $key";
+            unset($oaipmhkeys[$key]);
+        }
+        return $oaipmhkeys;
     }
 }

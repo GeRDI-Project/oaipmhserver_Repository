@@ -4,6 +4,8 @@
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
          http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
   <responseDate>{{ "now" | date('c') }} </responseDate>
-  <request verb="Identify">{{ app.request.uri }}{{ app.request.getBaseURL() }}</request>
+  <request{% for key, param in params %} {{ key }}="{{ param }}"{% endfor %}>
+    {{ app.request.uri }}{{ app.request.getBaseURL() }}
+  </request>
 {% block payload %}{% endblock %}
 </OAI-PMH>
