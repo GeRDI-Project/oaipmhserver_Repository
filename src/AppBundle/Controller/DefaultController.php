@@ -18,8 +18,13 @@ class DefaultController extends Controller
         $params = $this->cleanOAIPMHkeys($request->query->all());
         switch ($request->query->get('verb')) {
             case "Identify":
+                if ($request->query->count() != 1) {
+                    $template = 'errors/badArgument.xml.twig';
+                } else {
+                    $template = 'verbs/identify.xml.twig';
+                }
                 $response->setContent(
-                    $this->renderView('verbs/identify.xml.twig', array(
+                    $this->renderView($template, array(
                         "params" => $params
                     ))
                 );
@@ -59,7 +64,6 @@ class DefaultController extends Controller
                         continue 2;
                 }
             }
-            echo "unsetting $key";
             unset($oaipmhkeys[$key]);
         }
         return $oaipmhkeys;
