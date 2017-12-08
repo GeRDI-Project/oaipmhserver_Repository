@@ -19,14 +19,22 @@ class DefaultController extends Controller
         switch ($request->query->get('verb')) {
             case "Identify":
                 $response->setContent(
-                    $this->renderView('verbs/identify.html.twig', array(
+                    $this->renderView('verbs/identify.xml.twig', array(
                         "params" => $params
                     ))
                 );
                 break;
+            case "ListSets":
+                $response->setContent(
+                    $this->renderView('errors/noSetHierarchy.xml.twig', array(
+                        "params" => $params
+                    ))
+                );
+                break;
+
             default:
                 $response->setContent(
-                    $this->renderView('errors/illegalOAIverb.html.twig', array(
+                    $this->renderView('errors/illegalOAIverb.xml.twig', array(
                         "params" => $params
                     ))
                 );
