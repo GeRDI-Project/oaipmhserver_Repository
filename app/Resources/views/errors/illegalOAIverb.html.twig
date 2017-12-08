@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-       xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ 
-                           http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-<responseDate>{{ "now" | date('c') }}</responseDate>
-<request>{{ app.request.uri }}{{ app.request.getBaseURL() }}</request>
+{% extends 'base.xml.twig' %}
+{% block payload %}
 <error code="badVerb">Illegal OAI verb</error>
-</OAI-PMH>
+{% endblock %}
