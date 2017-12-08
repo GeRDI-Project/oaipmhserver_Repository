@@ -34,6 +34,7 @@ class DefaultController extends Controller
                     ))
                 );
                 break;
+
             case "ListSets":
                 $response->setContent(
                     $this->renderView('errors/noSetHierarchy.xml.twig', array(
@@ -41,7 +42,17 @@ class DefaultController extends Controller
                     ))
                 );
                 break;
-
+            case "ListMetadataFormats":
+                $metadataFormats = $this->getDoctrine()
+                    ->getRepository('AppBundle:MetadataFormat')
+                    ->findAll();
+                $response->setContent(
+                    $this->renderView('verbs/listMetadataFormats.xml.twig', array(
+                        "params" => $params,
+                        "metadataFormats" => $metadataFormats
+                    ))
+                );
+                break;
             default:
                 $response->setContent(
                     $this->renderView('errors/illegalOAIverb.xml.twig', array(

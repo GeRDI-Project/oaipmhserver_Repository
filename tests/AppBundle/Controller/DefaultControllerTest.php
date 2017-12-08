@@ -98,4 +98,13 @@ class DefaultControllerTest extends WebTestCase
         $xml->loadXML($client->getResponse()->getContent());
         $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
     }
+
+    public function testListMetadataFormatsGet()
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/?verb=ListMetadataFormats');
+        $xml = new DOMDocument();
+        $xml->loadXML($client->getResponse()->getContent());
+        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
+    }
 }
