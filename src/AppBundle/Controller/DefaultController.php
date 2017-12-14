@@ -16,6 +16,8 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         $response = new Response();
+        //params is only for the view, since the validation fails if given params
+        //are not valid
         $params = $this->cleanOAIPMHkeys($request->query->all());
         switch ($request->query->get('verb')) {
             case "Identify":
@@ -43,6 +45,16 @@ class DefaultController extends Controller
                 );
                 break;
             case "ListMetadataFormats":
+                //ListMetadataFormats allows for one optional argument "identifier"
+                if ($request->query->count() >  2 or
+                    ($request->query->count() == 2 and ! $request->query->has('identifier'))) {
+                    $response->setContent(
+                        $this->renderView('errors/badArgument.xml.twig', array(
+                            "params" => $params,
+                        ))
+                    );
+                    continue;
+                }
                 $metadataFormats = $this->getDoctrine()
                     ->getRepository('AppBundle:MetadataFormat')
                     ->findAll();
@@ -55,7 +67,7 @@ class DefaultController extends Controller
                 break;
             default:
                 $response->setContent(
-                    $this->renderView('errors/illegalOAIverb.xml.twig', array(
+                    $this->renderView('errors/badVerb.xml.twig', array(
                         "params" => $params
                     ))
                 );
@@ -64,7 +76,7 @@ class DefaultController extends Controller
         return $response;
     }
     /**
-     * @todo find suitable class for this function
+     * @todo find suitable class for these functions
      */
     public function cleanOAIPMHkeys(array $oaipmhkeys)
     {
@@ -83,5 +95,10 @@ class DefaultController extends Controller
             unset($oaipmhkeys[$key]);
         }
         return $oaipmhkeys;
+    }
+
+    public function checkOAIPMHverbs($verb)
+    {
+        var_dump($verb);
     }
 }
