@@ -38,15 +38,26 @@ class DefaultController extends Controller
                 break;
 
             case "ListSets":
+                if ($request->query->count() !=  1 or
+                    ($request->query->count() == 2 and ! $request->query->has('resumptionToken'))) {
+
+                    $response->setContent(
+                        $this->renderView('errors/badArgument.xml.twig', array(
+                            "params" => $params,
+                        ))
+                    );
+                    continue;
+                }
                 $response->setContent(
                     $this->renderView('errors/noSetHierarchy.xml.twig', array(
                         "params" => $params
                     ))
                 );
                 break;
+
             case "ListMetadataFormats":
                 //ListMetadataFormats allows for one optional argument "identifier"
-                if ($request->query->count() >  2 or
+                if ($request->query->count() != 1 or
                     ($request->query->count() == 2 and ! $request->query->has('identifier'))) {
                     $response->setContent(
                         $this->renderView('errors/badArgument.xml.twig', array(
@@ -65,6 +76,7 @@ class DefaultController extends Controller
                     ))
                 );
                 break;
+
             default:
                 $response->setContent(
                     $this->renderView('errors/badVerb.xml.twig', array(

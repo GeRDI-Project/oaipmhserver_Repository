@@ -108,8 +108,83 @@ class DefaultControllerTest extends WebTestCase
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:Identify',
+                $contents
+            ),
+            "Answer does not include exactly one Identify tag"
+        );
+
     }
 
+    public function testIdentifyBadArgument()
+    {
+        $queryData = array(
+            'verb'  => "Identify",
+            'some'  => "OtherValue",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code='badArgument'"
+        );
+    }
+
+    /**
+     * @todo: add an alternative "or" in assert-Statement, when Sets are supported
+     */
+    public function testListSets()
+    {
+        $queryData = array(
+            'verb'  => "ListSets",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code='noSetHierarchy'"
+        );
+    }
+    
+    public function testListSetsBadArgument()
+    {
+        $queryData = array(
+            'verb'  => "ListSets",
+            'some'  => "otherValue",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code='badArgument'"
+        );
+    }
+    public function testListMetadataFormats()
+    {
+        $queryData = array(
+            'verb'  => "ListMetadataFormats",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListMetadataFormats',
+                $contents
+            ),
+            "Answer does not include exactly one ListMetadataFormats tag"
+        );
+    }
 /* @todo clarify whether this really violates the standard
     public function testMultipleVerbsValidatesGet()
     {
@@ -122,61 +197,10 @@ class DefaultControllerTest extends WebTestCase
             0,
             $crawler->filter('xml:contains("badVerb")')->count()
         );
-    }
+    } 
 
 
 
-
-
-    public function testIdentifyBadArgumentGet()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=Identify&someother=value');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-
-
-    public function testNoVerbValidatesPost()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('POST', '/');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testIdentifyValidatesPost()
-    {
-        $this->postData = array(
-            'verb'  => "Identify",
-        );
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/', $this->postData);
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testListSets()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListSets');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testListMetadataFormatsGet()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListMetadataFormats');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
 
     public function testListMetadataFormats()
     {
