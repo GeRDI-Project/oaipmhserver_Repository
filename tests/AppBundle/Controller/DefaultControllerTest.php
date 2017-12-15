@@ -101,7 +101,7 @@ class DefaultControllerTest extends WebTestCase
         );
     }
 
-    public function testIdentifyValidatesGet()
+    public function testIdentify()
     {
         $queryData = array(
             'verb'  => "Identify",
@@ -170,6 +170,12 @@ class DefaultControllerTest extends WebTestCase
             "Answer does not include exactly one error tag with code='badArgument'"
         );
     }
+    
+
+    /**
+     * @todo: Add public function testListSetsBadResumptionToken here when resumptionTokens are supported
+     */
+
     public function testListMetadataFormats()
     {
         $queryData = array(
@@ -184,7 +190,60 @@ class DefaultControllerTest extends WebTestCase
             ),
             "Answer does not include exactly one ListMetadataFormats tag"
         );
+        
     }
+
+    public function testListMetadataFormatsWithIdExists()
+    {
+        $queryData = array(
+            'verb'  => "ListMetadataFormats",
+            'identifier' => 'oai:www.alpendac.eu:1',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListMetadataFormats',
+                $contents
+            ),
+            "Answer does not include exactly one ListMetadataFormats tag"
+        );
+    }
+/*
+    public function testListMetadataFormatsBadIdentifier1()
+    {
+        $queryData = array(
+            'verb'  => "ListMetadataFormats",
+            'identifier' => 'oai:www.alpendac.eu:xyz',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badIdentifier"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badIdentifier'"
+        );
+    }
+
+    public function testListMetadataFormatsBadIdentifier2()
+    {
+        $queryData = array(
+            'verb'  => "ListMetadataFormats",
+            'identifier' => 'oai:www.alpendac.eu:10000',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badIdentifier"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badIdentifier'"
+        );
+    }
+*/
 /* @todo clarify whether this really violates the standard
     public function testMultipleVerbsValidatesGet()
     {
@@ -197,18 +256,6 @@ class DefaultControllerTest extends WebTestCase
             0,
             $crawler->filter('xml:contains("badVerb")')->count()
         );
-    } 
-
-
-
-
-    public function testListMetadataFormats()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListMetadataFormats');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
     }
 
     public function testListMetadataFormatsWithIdExists()
@@ -227,7 +274,6 @@ class DefaultControllerTest extends WebTestCase
         $xml = new DOMDocument();
         $xml->loadXML($client->getResponse()->getContent());
         $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-        var_dump($crawler->filter('xml:contains("badArgument")'));
         $this->assertGreaterThan(
             0,
             $crawler->filter('xml:contains("badArgument")')->count()

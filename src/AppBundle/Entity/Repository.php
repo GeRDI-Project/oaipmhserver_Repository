@@ -1,70 +1,106 @@
 <?php
+
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
-* @ORM\Entity
-* @ORM\Table(name="repository")
-*/
+ * Repository
+ *
+ * @ORM\Table(name="repository")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\RepositoryRepository")
+ */
 class Repository
 {
     /**
-    * @ORM\Column(type="integer")
-    * @ORM\Id
-    * @ORM\GeneratedValue(strategy="AUTO")
-    */
-    protected $id;
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $name;
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     */
+    private $name;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $baseUrl;
+     * @var string
+     *
+     * @ORM\Column(name="base_url", type="string", length=255)
+     */
+    private $baseUrl;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $compression;
+     * @var string
+     *
+     * @ORM\Column(name="compression", type="string", length=255)
+     */
+    private $compression;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $highestId;
+     * @var string
+     *
+     * @ORM\Column(name="highest_id", type="string", length=255)
+     */
+    private $highestId;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $deletedRecord;
+     * @var string
+     *
+     * @ORM\Column(name="deleted_record", type="string", length=255)
+     */
+    private $deletedRecord;
 
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $adminEmail;
-    
+     * @var string
+     *
+     * @ORM\Column(name="admin_email", type="string", length=255)
+     */
+    private $adminEmail;
+
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $protocolVersion;
-    
+     * @var string
+     *
+     * @ORM\Column(name="protocol_version", type="string", length=100)
+     */
+    private $protocolVersion;
+
     /**
-    * @ORM\Column(type="string", length=100)
-    */
-    protected $granularity;
-    
+     * @var string
+     *
+     * @ORM\Column(name="granularity", type="string", length=100)
+     */
+    private $granularity;
+
     /**
-    * @ORM\Column(type="text")
-    */
-    protected $description;
-    
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text")
+     */
+    private $description;
+
     /**
-    * @ORM\Column(type="datetime")
-    */
-    protected $earliestTimestamp;
+     * @var \DateTime
+     *
+     * @ORM\Column(name="earliest_timestamp", type="datetime")
+     */
+    private $earliestTimestamp;
+
+
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * Set name
@@ -305,14 +341,5 @@ class Repository
     {
         return $this->earliestTimestamp;
     }
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
 }
+

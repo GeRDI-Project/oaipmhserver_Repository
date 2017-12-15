@@ -6,12 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * MetadataFormat
+ * Item
  *
- * @ORM\Table(name="metadata_format")
- * @ORM\Entity(repositoryClass="AppBundle\Repository\MetadataFormatRepository")
+ * @ORM\Table(name="item")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ItemRepository")
  */
-class MetadataFormat
+class Item
 {
     /**
      * @var int
@@ -25,26 +25,26 @@ class MetadataFormat
     /**
      * @var string
      *
-     * @ORM\Column(name="metadata_prefix", type="string", length=255)
+     * @ORM\Column(name="id_ext", type="string", length=255)
      */
-    private $metadataPrefix;
+    private $idExt;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="metadata_schema", type="string", length=255)
+     * @ORM\Column(name="state", type="string", length=50)
      */
-    private $metadataSchema;
+    private $state;
 
     /**
-     * @var string
+     * @var \DateTime
      *
-     * @ORM\Column(name="metadata_namespace", type="string", length=255)
+     * @ORM\Column(name="timestamp", type="datetime")
      */
-    private $metadataNamespace;
+    private $timestamp;
 
     /**
-     * @ORM\OneToMany(targetEntity="Record", mappedBy="metadataFormat")
+     * @ORM\OneToMany(targetEntity="Record", mappedBy="item")
      */
     private $records;
 
@@ -64,75 +64,75 @@ class MetadataFormat
     }
 
     /**
-     * Set metadataPrefix
+     * Set idExt
      *
-     * @param string $metadataPrefix
+     * @param string $idExt
      *
-     * @return MetadataFormat
+     * @return Item
      */
-    public function setMetadataPrefix($metadataPrefix)
+    public function setIdExt($idExt)
     {
-        $this->metadataPrefix = $metadataPrefix;
+        $this->idExt = $idExt;
 
         return $this;
     }
 
     /**
-     * Get metadataPrefix
+     * Get idExt
      *
      * @return string
      */
-    public function getMetadataPrefix()
+    public function getIdExt()
     {
-        return $this->metadataPrefix;
+        return $this->idExt;
     }
 
     /**
-     * Set metadataSchema
+     * Set state
      *
-     * @param string $metadataSchema
+     * @param string $state
      *
-     * @return MetadataFormat
+     * @return Item
      */
-    public function setMetadataSchema($metadataSchema)
+    public function setState($state)
     {
-        $this->metadataSchema = $metadataSchema;
+        $this->state = $state;
 
         return $this;
     }
 
     /**
-     * Get metadataSchema
+     * Get state
      *
      * @return string
      */
-    public function getMetadataSchema()
+    public function getState()
     {
-        return $this->metadataSchema;
+        return $this->state;
     }
 
     /**
-     * Set metadataNamespace
+     * Set timestamp
      *
-     * @param string $metadataNamespace
+     * @param \DateTime $timestamp
      *
-     * @return MetadataFormat
+     * @return Item
      */
-    public function setMetadataNamespace($metadataNamespace)
+    public function setTimestamp($timestamp)
     {
-        $this->metadataNamespace = $metadataNamespace;
+        $this->timestamp = $timestamp;
 
         return $this;
     }
 
     /**
-     * Get metadataNamespace
+     * Get timestamp
      *
-     * @return string
+     * @return \DateTime
      */
-    public function getMetadataNamespace()
+    public function getTimestamp()
     {
-        return $this->metadataNamespace;
+        return $this->timestamp;
     }
 
     /**
@@ -140,7 +140,7 @@ class MetadataFormat
      *
      * @param \AppBundle\Entity\Record $record
      *
-     * @return MetadataFormat
+     * @return Item
      */
     public function addRecord(\AppBundle\Entity\Record $record)
     {
