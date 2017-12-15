@@ -1,0 +1,4 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+<error code="idDoesNotExist">identifier '{{ params.identifier }}' does not exist.</error>
+{% endblock %}

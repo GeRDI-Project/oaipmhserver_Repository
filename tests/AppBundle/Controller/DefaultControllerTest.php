@@ -209,8 +209,8 @@ class DefaultControllerTest extends WebTestCase
             "Answer does not include exactly one ListMetadataFormats tag"
         );
     }
-/*
-    public function testListMetadataFormatsBadIdentifier1()
+
+    public function testListMetadataFormatsIdDoesNotExist1()
     {
         $queryData = array(
             'verb'  => "ListMetadataFormats",
@@ -220,14 +220,14 @@ class DefaultControllerTest extends WebTestCase
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="badIdentifier"]',
+                '/o:OAI-PMH/o:error[@code="idDoesNotExist"]',
                 $contents
             ),
-            "Answer does not include exactly one error tag with code 'badIdentifier'"
+            "Answer does not include exactly one error tag with code 'idDoesNotExist'"
         );
     }
 
-    public function testListMetadataFormatsBadIdentifier2()
+    public function testListMetadataFormatsIdDoesNotExist2()
     {
         $queryData = array(
             'verb'  => "ListMetadataFormats",
@@ -237,13 +237,32 @@ class DefaultControllerTest extends WebTestCase
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="badIdentifier"]',
+                '/o:OAI-PMH/o:error[@code="idDoesNotExist"]',
                 $contents
             ),
-            "Answer does not include exactly one error tag with code 'badIdentifier'"
+            "Answer does not include exactly one error tag with code 'idDoesNotExist'"
         );
     }
-*/
+
+    public function testListMetadataFormatsNoMetadataFormats()
+    {
+        $queryData = array(
+            'verb'  => "ListMetadataFormats",
+            'identifier' => 'oai:www.alpendac.eu:2',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noMetadataFormats"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noMetadataFormats'"
+        );
+    }
+
+    
+
 /* @todo clarify whether this really violates the standard
     public function testMultipleVerbsValidatesGet()
     {

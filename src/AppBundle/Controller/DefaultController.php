@@ -73,7 +73,6 @@ class DefaultController extends Controller
 
     protected function oaiListMetadataFormats(Request $request, array $params)
     {
-
         /* Two modes are possible:
          * Either identifier is set, so we retrieve all MetadataFormats for
          * identifier */
@@ -89,19 +88,26 @@ class DefaultController extends Controller
             )) {
                 $item = $this->getDoctrine()
                     ->getRepository('AppBundle:Item')
-                    ->findById($matches[1])[0];
-                foreach ($item->getRecords() as $record) {
-                    $metadataFormats[] = $record->getMetadataFormat();
+                    ->findOneById($matches[1]);
+                if (!is_null($item)) {
+                    $metadataFormats = array();
+                    foreach ($item->getRecords() as $record) {
+                        $metadataFormats[] = $record->getMetadataFormat();
+                    }
+                    if (count($metadataFormats) == 0) {
+                        return $this->renderView('errors/noMetadataFormats.xml.twig', array(
+                            "params" => $params,
+                        ));
+                    }
+                    return $this->renderView('verbs/listMetadataFormats.xml.twig', array(
+                        "params" => $params,
+                        "metadataFormats" => $metadataFormats,
+                    ));
                 }
-                return $this->renderView('verbs/listMetadataFormats.xml.twig', array(
-                    "params" => $params,
-                    "metadataFormats" => $metadataFormats,
-                ));
-            } else {
-                return  $this->renderView('errors/badIdentifier.xml.twig', array(
-                    "params" => $params,
-                ));
             }
+            return  $this->renderView('errors/idDoesNotExist.xml.twig', array(
+                "params" => $params,
+            ));
         /* Or identifier is not set, so we retrieve all MetadataFormats */
         } elseif ($request->query->count() == 1) {
             $metadataFormats = $this->getDoctrine()
@@ -134,6 +140,10 @@ class DefaultController extends Controller
                     case "ListSets":
                         continue 2;
                 }
+            }
+            switch ($key) {
+                case "identifier":
+                    continue 2;
             }
             unset($oaipmhkeys[$key]);
         }
