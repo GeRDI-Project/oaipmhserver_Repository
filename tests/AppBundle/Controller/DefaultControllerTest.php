@@ -334,7 +334,7 @@ class DefaultControllerTest extends WebTestCase
         );
     }
 
-    public function testGetRecordIdDoesNotExist()
+    public function testGetRecordIdDoesNotExist1()
     {
         $queryData = array(
             'verb'  => "GetRecord",
@@ -352,6 +352,24 @@ class DefaultControllerTest extends WebTestCase
         );
     }
 
+    public function testGetRecordIdDoesNotExist2()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'asjkdbaksdjask',
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="idDoesNotExist"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'idDoesNotExist'"
+        );
+    }
+/*
     public function testListIdentifiersMin()
     {
         $queryData = array(
@@ -376,25 +394,6 @@ class DefaultControllerTest extends WebTestCase
             'metadataPrefix' => 'oai_dc',
             'from'  => '2017-09-09',
             'until' => '2017-12-31',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListIdentifiers',
-                $contents
-            ),
-            "Answer does not include exactly one ListIdentifiers tag"
-        );
-    }
-
-    public function testListIdentifiersFromUntilLong()
-    {
-        $queryData = array(
-            'verb'  => "ListIdentifiers",
-            'metadataPrefix' => 'oai_dc',
-            'from'  => '2017-09-09T12:00:00Z',
-            'until' => '2017-12-31T23:59:59Z',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);

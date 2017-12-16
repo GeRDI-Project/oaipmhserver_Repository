@@ -1,0 +1,14 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+  <GetRecord>
+   <record> 
+    <header>
+      <identifier>{{ params.identifier }}</identifier> 
+      <datestamp>{{ item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
+    </header>
+    <metadata>
+        {{ record.xml | raw }}
+    </metadata>
+  </record>
+ </GetRecord>
+{% endblock %}

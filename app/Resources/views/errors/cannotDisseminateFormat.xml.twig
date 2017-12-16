@@ -1,0 +1,4 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+<error code="cannotDisseminateFormat">The metadata format '{{ params.metadataPrefix }}' is not available for item '{{ params.identifier }}'</error>
+{% endblock %}

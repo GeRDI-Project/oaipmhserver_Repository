@@ -31,6 +31,9 @@ class DefaultController extends Controller
             case "ListMetadataFormats":
                 $response->setContent($this->oaiListMetadataFormats($request, $params));
                 break;
+            case "GetRecord":
+                $response->setContent($this->oaiGetRecord($request, $params));
+                break;
             default:
                 $response->setContent(
                     $this->renderView('errors/badVerb.xml.twig', array(
@@ -77,12 +80,9 @@ class DefaultController extends Controller
          * Either identifier is set, so we retrieve all MetadataFormats for
          * identifier */
         if ($request->query->count() == 2 and $request->query->has('identifier')) {
-            $baseUrl = $this->getDoctrine()
-                ->getRepository('AppBundle:Repository')
-                ->findById(1)[0]
-                ->getBaseUrl();
+            $baseUrl = $this->getRepositoryBaseUrl();
             if (preg_match(
-                "/^oai:$baseUrl.*(\d+)$/",
+                "/^oai:$baseUrl:(\d+)$/",
                 $request->query->get('identifier'),
                 $matches
             )) {
@@ -124,9 +124,65 @@ class DefaultController extends Controller
         }
     }
 
+    public function oaiGetRecord(Request $request, array $params)
+    {
+        //Check for badArguments
+        if ($request->query->count() != 3) {
+            $template = 'errors/badArgument.xml.twig';
+        } else {
+            //Check if id exists
+            $baseUrl = $this->getRepositoryBaseUrl();
+            if (preg_match(
+                "/^oai:$baseUrl:(\d+)$/",
+                $request->query->get('identifier'),
+                $matches
+            )) {
+                $item = $this->getDoctrine()
+                    ->getRepository('AppBundle:Item')
+                    ->findOneById($matches[1]);
+                if (is_null($item)) {
+                    $template = 'errors/idDoesNotExist.xml.twig';
+                } else {
+                    //Check whether requested metadataPrefix can be disseminated
+                    foreach ($item->getRecords() as $record) {
+                        if ($record->getMetadataFormat()->getMetadataPrefix()
+                            == $params["metadataPrefix"] ) {
+                            return $this->renderView(
+                                'verbs/GetRecord.xml.twig',
+                                array(
+                                    "params" => $params,
+                                    "record" => $record,
+                                    "item" => $item,
+                                )
+                            );
+                        }
+                    }
+                }
+                //Nothing found to disseminate!
+                if (!isset($template)) {
+                    $template = 'errors/cannotDisseminateFormat.xml.twig';
+                }
+            } else {
+                $template = 'errors/idDoesNotExist.xml.twig';
+            }
+        }
+        return $this->renderView($template, array(
+            "params" => $params,
+        ));
+    }
+
     /**
      * @todo find suitable class for these functions
      */
+
+    public function getRepositoryBaseUrl()
+    {
+        return $this->getDoctrine()
+            ->getRepository('AppBundle:Repository')
+            ->findOneById(1)
+            ->getBaseUrl();
+    }
+
     public function cleanOAIPMHkeys(array $oaipmhkeys)
     {
         foreach ($oaipmhkeys as $key => $value) {
@@ -143,6 +199,7 @@ class DefaultController extends Controller
             }
             switch ($key) {
                 case "identifier":
+                case "metadataPrefix":
                     continue 2;
             }
             unset($oaipmhkeys[$key]);
