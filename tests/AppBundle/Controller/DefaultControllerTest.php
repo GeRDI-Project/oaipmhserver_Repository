@@ -63,6 +63,7 @@ class DefaultControllerTest extends WebTestCase
             }
             $xpath = new DOMXpath($xml);
             $xpath->registerNamespace("o", "http://www.openarchives.org/OAI/2.0/");
+            $xpath->registerNamespace("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc/");
             $result = $xpath->query($xpathQuery, $xml->documentElement);
             if ($result->length != 1) {
                 return false;
@@ -261,7 +262,505 @@ class DefaultControllerTest extends WebTestCase
         );
     }
 
+    public function testGetRecord()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'oai:www.alpendac.eu:1',
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:GetRecord/o:record/o:metadata/oai_dc:dc',
+                $contents
+            ),
+            "Answer does not include exactly one oai_dc:dc tag"
+        );
+    }
+
+    public function testGetRecordBadArgument1()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'oai:www.alpendac.eu:1',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    public function testGetRecordBadArgument2()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'oai:www.alpendac.eu:1',
+            'metadataPrefix' => 'oai_dc',
+            'some'  => 'otherValue',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    public function testGetRecordCannotDisseminateFormat()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'oai:www.alpendac.eu:2',
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="cannotDisseminateFormat"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'cannotDisseminateFormat'"
+        );
+    }
+
+    public function testGetRecordIdDoesNotExist()
+    {
+        $queryData = array(
+            'verb'  => "GetRecord",
+            'identifier' => 'oai:www.alpendac.eu:10000',
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="idDoesNotExist"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'idDoesNotExist'"
+        );
+    }
+
+    public function testListIdentifiersMin()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListIdentifiers',
+                $contents
+            ),
+            "Answer does not include exactly one ListIdentifiers tag"
+        );
+    }
+
+    public function testListIdentifiersFromUntilShort()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09',
+            'until' => '2017-12-31',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListIdentifiers',
+                $contents
+            ),
+            "Answer does not include exactly one ListIdentifiers tag"
+        );
+    }
+
+    public function testListIdentifiersFromUntilLong()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09T12:00:00Z',
+            'until' => '2017-12-31T23:59:59Z',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListIdentifiers',
+                $contents
+            ),
+            "Answer does not include exactly one ListIdentifiers tag"
+        );
+    }
+
+    /**
+     * metadataPrefix must be set
+     */
+    public function testListIdentifiersbadArgument1()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
     
+    /**
+     * some=value is not allowed
+     */
+    public function testListIdentifiersbadArgument2()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09T12:00:00Z',
+            'until' => '2017-12-31T23:59:59Z',
+            'some'  => 'value',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
+     * resumptionToken is an exclusive parameter
+     */
+    public function testListIdentifiersbadArgument3()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'resumptionToken' => 'token123',
+            'until' => '2017-12-31T23:59:59Z',
+            'some'  => 'value',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
+     * We do not support resumptionTokens
+     * @todo If we do that, this test case must be rewritten
+     * and a testcase for a successful resumption token added.
+     */
+    public function testListIdentifiersBadResumptionToken()
+    {
+        $queryData = array(
+            'resumptionToken' => 'token123',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badResumptionToken'"
+        );
+    }
+
+    /**
+     * metadataPrefis is not supported
+     */
+    public function testListIdentifiersCannotDisseminateFormat()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_nonexistingschema',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="cannotDisseminateFormat"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'cannotDisseminateFormat'"
+        );
+    }
+
+    /**
+     *  from - until values result in an empty list
+     *  @todo: if we start to support sets, we need a second version
+     *  of this test to test a set request that results in an empty list.
+     */
+    public function testListIdentifiersNoRecordMatch1()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_nonexistingschema',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noRecordsMatch"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noRecordsMatch'"
+        );
+    }
+
+    /**
+     *  We do not support sets (this test can be deleted
+     *  when we start doing so)
+     */
+    public function testListIdentifiersNoSetHierarchy()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'set' => 'setTag',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noSetHierarchy'"
+        );
+    }
+
+    public function testListRecordsMin()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListRecords',
+                $contents
+            ),
+            "Answer does not include exactly one ListRecords tag"
+        );
+    }
+
+    public function testListRecordsFromUntilShort()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09',
+            'until' => '2017-12-31',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListRecords',
+                $contents
+            ),
+            "Answer does not include exactly one ListRecords tag"
+        );
+    }
+
+    public function testListRecordsFromUntilLong()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09T12:00:00Z',
+            'until' => '2017-12-31T23:59:59Z',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListRecords',
+                $contents
+            ),
+            "Answer does not include exactly one ListRecords tag"
+        );
+    }
+
+    /**
+     * metadataPrefix must be set
+     */
+    public function testListRecordsbadArgument1()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+    
+    /**
+     * some=value is not allowed
+     */
+    public function testListRecordsbadArgument2()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09T12:00:00Z',
+            'until' => '2017-12-31T23:59:59Z',
+            'some'  => 'value',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
+     * resumptionToken is an exclusive parameter
+     */
+    public function testListRecordsbadArgument3()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'resumptionToken' => 'token123',
+            'until' => '2017-12-31T23:59:59Z',
+            'some'  => 'value',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
+     * We do not support resumptionTokens
+     * @todo If we do that, this test case must be rewritten
+     * and a testcase for a successful resumption token added.
+     */
+    public function testListRecordsBadResumptionToken()
+    {
+        $queryData = array(
+            'resumptionToken' => 'token123',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badResumptionToken'"
+        );
+    }
+
+    /**
+     * metadataPrefis is not supported
+     */
+    public function testListRecordsCannotDisseminateFormat()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_nonexistingschema',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="cannotDisseminateFormat"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'cannotDisseminateFormat'"
+        );
+    }
+
+    /**
+     *  from - until values result in an empty list
+     *  @todo: if we start to support sets, we need a second version
+     *  of this test to test a set request that results in an empty list.
+     */
+    public function testListRecordsNoRecordMatch1()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_nonexistingschema',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noRecordsMatch"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noRecordsMatch'"
+        );
+    }
+
+    /**
+     *  We do not support sets (this test can be deleted
+     *  when we start doing so)
+     */
+    public function testListRecordsNoSetHierarchy()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'set' => 'setTag',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noSetHierarchy'"
+        );
+    }
 
 /* @todo clarify whether this really violates the standard
     public function testMultipleVerbsValidatesGet()
@@ -275,83 +774,6 @@ class DefaultControllerTest extends WebTestCase
             0,
             $crawler->filter('xml:contains("badVerb")')->count()
         );
-    }
-
-    public function testListMetadataFormatsWithIdExists()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListMetadataFormats&identifier=oai:example.de:1');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testListMetadataFormatsBadArgument()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListMetadataFormats&identifier=oai:example.de:1&tritra=trullala');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-        $this->assertGreaterThan(
-            0,
-            $crawler->filter('xml:contains("badArgument")')->count()
-        );
-    
-    }
-
-    public function testListMetadataFormatsWithIdNotExists()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListMetadataFormats&identifier=oai:example.de:bliblablu');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testGetRecordExists()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=GetRecord&identifier=oai:example.de:1&metadaPrefix=oai_dc');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testGetRecordNotExists()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=GetRecord&identifier=oai:example.de:bliblablu&metadaPrefix=oai_dc');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testGetRecordMetadataFormatNotExists()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=GetRecord&identifier=oai:example.de:1&metadaPrefix=oai_notexists');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testListIdentifieres()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListIdentifiers');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
-    }
-
-    public function testListRecords()
-    {
-        $client = static::createClient();
-        $crawler = $client->request('GET', '/?verb=ListRecords');
-        $xml = new DOMDocument();
-        $xml->loadXML($client->getResponse()->getContent());
-        $this->assertTrue($xml->schemaValidate('tests/Resources/oaipmhResponse.xsd'));
     }
  */
 }
