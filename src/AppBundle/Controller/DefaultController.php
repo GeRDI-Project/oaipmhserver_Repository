@@ -50,7 +50,7 @@ class DefaultController extends Controller
         if ($request->query->count() != 1) {
             $template = 'errors/badArgument.xml.twig';
         } else {
-            $template = 'verbs/identify.xml.twig';
+            $template = 'verbs/Identify.xml.twig';
         }
         $repository = $this->getDoctrine()
             ->getRepository('AppBundle:Repository')
@@ -99,7 +99,7 @@ class DefaultController extends Controller
                             "params" => $params,
                         ));
                     }
-                    return $this->renderView('verbs/listMetadataFormats.xml.twig', array(
+                    return $this->renderView('verbs/ListMetadataFormats.xml.twig', array(
                         "params" => $params,
                         "metadataFormats" => $metadataFormats,
                     ));
@@ -113,7 +113,7 @@ class DefaultController extends Controller
             $metadataFormats = $this->getDoctrine()
                 ->getRepository('AppBundle:MetadataFormat')
                 ->findAll();
-            return $this->renderView('verbs/listMetadataFormats.xml.twig', array(
+            return $this->renderView('verbs/ListMetadataFormats.xml.twig', array(
                     "params" => $params,
                     "metadataFormats" => $metadataFormats
             ));
@@ -198,8 +198,12 @@ class DefaultController extends Controller
                 }
             }
             switch ($key) {
+                case "from":
                 case "identifier":
                 case "metadataPrefix":
+                case "resumptionToken":
+                case "set":
+                case "until":
                     continue 2;
             }
             unset($oaipmhkeys[$key]);
