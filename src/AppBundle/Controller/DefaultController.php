@@ -36,6 +36,7 @@ class DefaultController extends Controller
                 $response->setContent($this->oaiGetRecord($request, $params));
                 break;
             case "ListIdentifiers":
+                var_dump($params);
                 $response->setContent($this->oaiListIdentifiers($request, $params));
                 break;
             case "ListRecords":
@@ -60,14 +61,14 @@ class DefaultController extends Controller
 
     protected function oaiIdentify(Request $request, array $params)
     {
-        if ($request->query->count() != 1) {
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "Identify")) {
             $template = 'errors/badArgument.xml.twig';
         } else {
             $template = 'verbs/Identify.xml.twig';
         }
         $repository = $this->getDoctrine()
             ->getRepository('AppBundle:Repository')
-            ->find(1);
+            ->findOneById(1);
         return $this->renderView($template, array(
             "params" => $params,
             "repository" => $repository,
@@ -76,8 +77,11 @@ class DefaultController extends Controller
 
     protected function oaiListSets(Request $request, array $params)
     {
+        /**
         if ($request->query->count() !=  1 or
             ($request->query->count() == 2 and ! $request->query->has('resumptionToken'))) {
+         */
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListSets")) {
                 return $this->renderView('errors/badArgument.xml.twig', array(
                     "params" => $params,
                 ));
@@ -89,10 +93,15 @@ class DefaultController extends Controller
 
     protected function oaiListMetadataFormats(Request $request, array $params)
     {
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListMetadataFormats")) {
+                return $this->renderView('errors/badArgument.xml.twig', array(
+                    "params" => $params,
+                ));
+        }
         /* Two modes are possible:
          * Either identifier is set, so we retrieve all MetadataFormats for
          * identifier */
-        if ($request->query->count() == 2 and $request->query->has('identifier')) {
+        if ($request->query->has('identifier')) {
             $baseUrl = $this->getRepositoryBaseUrl();
             if (preg_match(
                 "/^oai:$baseUrl:(\d+)$/",
@@ -122,7 +131,7 @@ class DefaultController extends Controller
                 "params" => $params,
             ));
         /* Or identifier is not set, so we retrieve all MetadataFormats */
-        } elseif ($request->query->count() == 1) {
+        } else {
             $metadataFormats = $this->getDoctrine()
                 ->getRepository('AppBundle:MetadataFormat')
                 ->findAll();
@@ -130,55 +139,52 @@ class DefaultController extends Controller
                     "params" => $params,
                     "metadataFormats" => $metadataFormats
             ));
-        } else {
-            return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-            ));
         }
     }
 
     public function oaiGetRecord(Request $request, array $params)
     {
-        //Check for badArguments
-        if ($request->query->count() != 3) {
-            $template = 'errors/badArgument.xml.twig';
-        } else {
-            //Check if id exists
-            $baseUrl = $this->getRepositoryBaseUrl();
-            if (preg_match(
-                "/^oai:$baseUrl:(\d+)$/",
-                $request->query->get('identifier'),
-                $matches
-            )) {
-                $item = $this->getDoctrine()
-                    ->getRepository('AppBundle:Item')
-                    ->findOneById($matches[1]);
-                if (is_null($item)) {
-                    $template = 'errors/idDoesNotExist.xml.twig';
-                } else {
-                    //Check whether requested metadataPrefix can be disseminated
-                    foreach ($item->getRecords() as $record) {
-                        if ($record->getMetadataFormat()->getMetadataPrefix()
-                            == $params["metadataPrefix"] ) {
-                            return $this->renderView(
-                                'verbs/GetRecord.xml.twig',
-                                array(
-                                    "params" => $params,
-                                    "record" => $record,
-                                    "item" => $item,
-                                )
-                            );
-                        }
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "GetRecord")) {
+                return $this->renderView('errors/badArgument.xml.twig', array(
+                    "params" => $params,
+                ));
+        }
+        //Check if id exists
+        $baseUrl = $this->getRepositoryBaseUrl();
+        if (preg_match(
+            "/^oai:$baseUrl:(\d+)$/",
+            $request->query->get('identifier'),
+            $matches
+        )) {
+            $item = $this->getDoctrine()
+                ->getRepository('AppBundle:Item')
+                ->findOneById($matches[1]);
+            if (is_null($item)) {
+                $template = 'errors/idDoesNotExist.xml.twig';
+            } else {
+                //Check whether requested metadataPrefix can be disseminated
+                foreach ($item->getRecords() as $record) {
+                    if ($record->getMetadataFormat()->getMetadataPrefix()
+                        == $params["metadataPrefix"] ) {
+                        return $this->renderView(
+                            'verbs/GetRecord.xml.twig',
+                            array(
+                                "params" => $params,
+                                "record" => $record,
+                                "item" => $item,
+                            )
+                        );
                     }
                 }
-                //Nothing found to disseminate!
-                if (!isset($template)) {
-                    $template = 'errors/cannotDisseminateFormat.xml.twig';
-                }
-            } else {
-                $template = 'errors/idDoesNotExist.xml.twig';
             }
+            //Nothing found to disseminate!
+            if (!isset($template)) {
+                $template = 'errors/cannotDisseminateFormat.xml.twig';
+            }
+        } else {
+            $template = 'errors/idDoesNotExist.xml.twig';
         }
+        
         return $this->renderView($template, array(
             "params" => $params,
         ));
@@ -186,16 +192,13 @@ class DefaultController extends Controller
     
     public function oaiListIdentifiers(Request $request, array $params)
     {
-        $error = false;
-        //Check for badArguments
-        if ((! $request->query->has("metadataPrefix")
-                and ! $request->query->has("resumptionToken"))
-            or count($request->query) != count($params)
-            or count($params) > 2 and $request->query->has("resumptionToken")) {
-            $template = 'errors/badArgument.xml.twig';
-            $error = true;
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListIdentifiers")) {
+                return $this->renderView('errors/badArgument.xml.twig', array(
+                    "params" => $params,
+                ));
         }
 
+        $error = false;
         //Check whether there is a set-selection (not supported yet)
         if (! $error and isset($params["set"])) {
             $template = 'errors/noSetHierarchy.xml.twig';
@@ -211,7 +214,6 @@ class DefaultController extends Controller
         if ($error) {
             return $this->renderView($template, array("params" => $params));
         }
-        
 
         $items = $this->getDoctrine()
            ->getRepository('AppBundle:Item')
@@ -251,15 +253,12 @@ class DefaultController extends Controller
 
     public function oaiListRecords(Request $request, array $params)
     {
-        $error = false;
-        //Check for badArguments
-        if ((! $request->query->has("metadataPrefix")
-                and ! $request->query->has("resumptionToken"))
-            or count($request->query) != count($params)
-            or count($params) > 2 and $request->query->has("resumptionToken")) {
-            $template = 'errors/badArgument.xml.twig';
-            $error = true;
+        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListIdentifiers")) {
+                return $this->renderView('errors/badArgument.xml.twig', array(
+                    "params" => $params,
+                ));
         }
+        $error = false;
 
         //Check whether there is a set-selection (not supported yet)
         if (! $error and isset($params["set"])) {

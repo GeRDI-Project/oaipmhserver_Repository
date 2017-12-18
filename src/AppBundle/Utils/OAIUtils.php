@@ -80,4 +80,96 @@ class OAIUtils
 
         return false;
     }
+
+    protected static function paramIsAllowedForVerb(String $param, String $verb)
+    {
+        switch ($param) {
+            case "identifier":
+                if ($verb == "ListMetadataFormats"
+                    or  $verb == "GetRecords") {
+                    return true;
+                }
+                // no break
+            case "metadataPrefix":
+                if ($verb == "GetRecords"
+                    or  $verb == "ListIdentifiers"
+                    or  $verb == "ListRecords") {
+                    return true;
+                }
+                // no break
+            case "from":
+            case "until":
+            case "set":
+                if ($verb == "ListIdentifiers"
+                    or  $verb == "ListRecords") {
+                    return true;
+                }
+                // no break
+            case "resumptionToken":
+                if ($verb == "ListIdentifiers"
+                    or  $verb == "ListRecords"
+                    or  $verb == "ListSets") {
+                    return true;
+                }
+                //no break
+            case "verb":
+                return true;
+                //no break
+            default:
+                return false;
+        }
+    }
+
+    protected static function getRequiredParamsForVerb(String $verb)
+    {
+        switch ($verb) {
+            case "GetRecord":
+                return array("identifier", "metadataPrefix");
+            case "ListRecords":
+            case "ListIdentifiers":
+                return array("metadataPrefix");
+            default:
+                return array();
+        }
+    }
+     
+    protected static function getExclusiveParamsForVerb(String $verb)
+    {
+        switch ($verb) {
+            case "ListIdentifiers":
+            case "ListRecords":
+            case "ListSets":
+                return array("resumptionToken");
+            default:
+                return array();
+        }
+    }
+
+    public static function badArgumentsForVerb(array $params, String $verb)
+    {
+        foreach ($params as $key => $value) {
+            if (!OAIUtils::paramIsAllowedForVerb($key, $verb)) {
+                return true;
+            }
+        }
+        foreach (OAIUtils::getRequiredParamsForVerb($verb) as $req) {
+            if (!array_key_exists($req, $params)) {
+                return true;
+            }
+        }
+        foreach (OAIUtils::getExclusiveParamsForVerb($verb) as $excl) {
+            if (array_key_exists($excl, $params) and count(params) > 2) {
+                return true;
+            }
+        }
+        //check dates:
+        $dateFields = array("from", "until");
+        foreach ($dateFields as $dateField) {
+            if (isset($params[$dateField])
+                and !OAIUtils::validateOaiDate($params[$dateField])) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
