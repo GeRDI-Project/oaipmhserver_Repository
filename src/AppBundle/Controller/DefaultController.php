@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\Item;
 use AppBundle\Entity\Record;
-use \DateTime;
+use AppBundle\Utils\OAIUtils;
 
 class DefaultController extends Controller
 {
@@ -21,7 +21,7 @@ class DefaultController extends Controller
         $response = new Response();
         //params is only for the view, since the validation fails if given params
         //are not valid
-        $params = $this->cleanOAIPMHkeys($request->query->all());
+        $params = OAIUtils::cleanOAIkeys($request->query->all());
         switch ($request->query->get('verb')) {
             case "Identify":
                 $response->setContent($this->oaiIdentify($request, $params));
@@ -42,9 +42,15 @@ class DefaultController extends Controller
                 $response->setContent($this->oaiListRecords($request, $params));
                 break;
             default:
+                if (! $request->query->has("verb")) {
+                    $message = "No verb given";
+                } else {
+                    $message = "Verb " . $request->query->get("verb") . " unknown";
+                }
                 $response->setContent(
                     $this->renderView('errors/badVerb.xml.twig', array(
-                        "params" => $params
+                        "params" => $params,
+                        "message" => $message
                     ))
                 );
         }
@@ -213,7 +219,7 @@ class DefaultController extends Controller
 
         $retItems = array();
         foreach ($items as $item) {
-            if (!$this->insideDateSelection($item, $params)) {
+            if (!OAIUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
             }
             //check whether metadataPrefix is available for item
@@ -278,7 +284,7 @@ class DefaultController extends Controller
 
         $retVal = array();
         foreach ($items as $item) {
-            if (!$this->insideDateSelection($item, $params)) {
+            if (!OAIUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
             }
             //check whether metadataPrefix is available for item
@@ -320,83 +326,5 @@ class DefaultController extends Controller
             ->getRepository('AppBundle:Repository')
             ->findOneById(1)
             ->getBaseUrl();
-    }
-
-    public function insideDateSelection(Item $item, array $params)
-    {
-        if (!isset($params["from"]) and !isset($params["until"])) {
-            return true;
-        }
-        $checkDates = array("from" => false, "until" => false);
-        foreach ($checkDates as $key => $value) {
-            if (isset($params[$key])) {
-                $checkDates[$key] = DateTime::createFromFormat(
-                    'Y-m-d\TH:i:sZ',
-                    $params[$key]
-                );
-                if (! $checkDates[$key]) {
-                    $checkDates[$key] = DateTime::createFromFormat(
-                        'Y-m-d',
-                        $params[$key]
-                    );
-                }
-            }
-        }
-        if ($checkDates["from"]
-            and $item->getTimestamp() < $checkDates["from"]) {
-            return false;
-        } elseif ($checkDates["until"]
-            and $item->getTimestamp() > $checkDates["until"]) {
-            return false;
-        }
-        return true;
-
-    }
-    public function cleanOAIPMHkeys(array $oaipmhkeys)
-    {
-        foreach ($oaipmhkeys as $key => $value) {
-            if ($key == "verb") {
-                switch ($value) {
-                    case "Identify":
-                    case "GetRecord":
-                    case "ListIdentifiers":
-                    case "ListMetadataFormats":
-                    case "ListRecords":
-                    case "ListSets":
-                        continue 2;
-                }
-            }
-            switch ($key) {
-                case "identifier":
-                case "metadataPrefix":
-                case "resumptionToken":
-                case "set":
-                    continue 2;
-                case "from":
-                case "until":
-                    if ($this->validateOaiDate($oaipmhkeys[$key])) {
-                        continue 2;
-                    }
-            }
-            unset($oaipmhkeys[$key]);
-        }
-        return $oaipmhkeys;
-    }
-
-    protected function validateOaiDate(String $date)
-    {
-        $long = DateTime::createFromFormat(
-            'Y-m-d\TH:i:sZ',
-            $date
-        );
-        if ($long && $long->format('Y-m-d\TH:i:sZ')) {
-            return true;
-        } else {
-            $short = DateTime::createFromFormat(
-                'Y-m-d',
-                $date
-            );
-            return $short && $short->format('Y-m-d') == $date;
-        }
     }
 }

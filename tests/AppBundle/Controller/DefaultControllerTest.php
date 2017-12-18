@@ -504,8 +504,7 @@ class DefaultControllerTest extends WebTestCase
         $queryData = array(
             'verb'  => "ListIdentifiers",
             'metadataPrefix' => 'oai_dc',
-            'resumptionToken' => 'token123',
-            'until' => '2017-13-12',
+            'until' => '2017-33-12asbdasd',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -736,8 +735,7 @@ class DefaultControllerTest extends WebTestCase
         $queryData = array(
             'verb'  => "ListRecords",
             'metadataPrefix' => 'oai_dc',
-            'resumptionToken' => 'token123',
-            'until' => '2017-13-12',
+            'until' => '2:3:4B8-9-10Z',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -747,95 +745,6 @@ class DefaultControllerTest extends WebTestCase
                 $contents
             ),
             "Answer does not include exactly one error tag with code 'badArgument'"
-        );
-    }
-
-    /**
-     * We do not support resumptionTokens
-     * @todo If we do that, this test case must be rewritten
-     * and a testcase for a successful resumption token added.
-     */
-    public function testListRecordsBadResumptionToken()
-    {
-        $queryData = array(
-            'verb' => 'ListRecords',
-            'resumptionToken' => 'token123',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
-                $contents
-            ),
-            "Answer does not include exactly one error tag with code 'badResumptionToken'"
-        );
-    }
-
-    /**
-     * metadataPrefis is not supported
-     */
-    public function testListRecordsCannotDisseminateFormat()
-    {
-        $queryData = array(
-            'verb'  => "ListRecords",
-            'metadataPrefix' => 'oai_nonexistingschema',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="cannotDisseminateFormat"]',
-                $contents
-            ),
-            "Answer does not include exactly one error tag with code 'cannotDisseminateFormat'"
-        );
-    }
-
-    /**
-     *  from - until values result in an empty list
-     *  @todo: if we start to support sets, we need a second version
-     *  of this test to test a set request that results in an empty list.
-     */
-    public function testListRecordsNoRecordMatch1()
-    {
-        $queryData = array(
-            'verb'  => "ListRecords",
-            'metadataPrefix' => 'oai_dc',
-            'until' => '1970-12-10',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactly(
-                '/o:OAI-PMH/o:error[@code="noRecordsMatch"]',
-                $contents,
-                0
-            ),
-            "Answer does not include exactly one error tag with code 'noRecordsMatch'",
-            0
-        );
-    }
-
-    /**
-     *  We do not support sets (this test can be deleted
-     *  when we start doing so)
-     */
-    public function testListRecordsNoSetHierarchy()
-    {
-        $queryData = array(
-            'verb'  => "ListRecords",
-            'metadataPrefix' => 'oai_dc',
-            'set' => 'setTag',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
-                $contents
-            ),
-            "Answer does not include exactly one error tag with code 'noSetHierarchy'"
         );
     }
 
