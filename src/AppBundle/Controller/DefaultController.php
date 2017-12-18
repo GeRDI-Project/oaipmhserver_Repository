@@ -38,6 +38,9 @@ class DefaultController extends Controller
             case "ListIdentifiers":
                 $response->setContent($this->oaiListIdentifiers($request, $params));
                 break;
+            case "ListRecords":
+                $response->setContent($this->oaiListRecords($request, $params));
+                break;
             default:
                 $response->setContent(
                     $this->renderView('errors/badVerb.xml.twig', array(
@@ -239,6 +242,74 @@ class DefaultController extends Controller
             );
         }
     }
+
+    public function oaiListRecords(Request $request, array $params)
+    {
+        $error = false;
+        //Check for badArguments
+        if ((! $request->query->has("metadataPrefix")
+                and ! $request->query->has("resumptionToken"))
+            or count($request->query) != count($params)
+            or count($params) > 2 and $request->query->has("resumptionToken")) {
+            $template = 'errors/badArgument.xml.twig';
+            $error = true;
+        }
+
+        //Check whether there is a set-selection (not supported yet)
+        if (! $error and isset($params["set"])) {
+            $template = 'errors/noSetHierarchy.xml.twig';
+            $error = true;
+        }
+
+        //Check for a resumptionToken (not supported yet)
+        if (! $error and isset($params["resumptionToken"])) {
+            $template = 'errors/badResumptionToken.xml.twig';
+            $error = true;
+        }
+
+        if ($error) {
+            return $this->renderView($template, array("params" => $params));
+        }
+        
+
+        $items = $this->getDoctrine()
+           ->getRepository('AppBundle:Item')
+           ->findAll();
+
+        $retVal = array();
+        foreach ($items as $item) {
+            if (!$this->insideDateSelection($item, $params)) {
+                continue;
+            }
+            //check whether metadataPrefix is available for item
+            foreach ($item->getRecords() as $record) {
+                if ($record->getMetadataFormat()->getMetadataPrefix()
+                    == $request->query->get("metadataPrefix")) {
+                    $val["item"] = $item;
+                    $val["record"] = $record;
+                    $retVal[] = $val;
+                }
+            }
+        }
+        if (count($retVal) == 0) {
+            return $this->renderView(
+                'errors/cannotDisseminateFormat.xml.twig',
+                array(
+                    "params" => $params,
+                )
+            );
+        } else {
+            return $this->renderView(
+                'verbs/ListRecords.xml.twig',
+                array(
+                    "params" => $params,
+                    "retVal"  => $retVal,
+                    "baseUrl" => $this->getRepositoryBaseUrl()
+                )
+            );
+        }
+    }
+
     /**
      * @todo find suitable class for these functions
      */

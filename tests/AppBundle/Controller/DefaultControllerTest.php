@@ -616,11 +616,12 @@ class DefaultControllerTest extends WebTestCase
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListRecords',
-                $contents
+            $this->checkXpathReturnsExactly(
+                '/o:OAI-PMH/o:ListRecords/o:record',
+                $contents,
+                3
             ),
-            "Answer does not include exactly one ListRecords tag"
+            "Answer does not include exactly three record tags"
         );
     }
 
@@ -636,29 +637,29 @@ class DefaultControllerTest extends WebTestCase
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListRecords',
+                '/o:OAI-PMH/o:ListRecords/o:record',
                 $contents
             ),
-            "Answer does not include exactly one ListRecords tag"
+            "Answer does not include exactly one record tag"
         );
     }
 
-    public function testListRecordsFromUntilLong()
+    public function testListRecordsFromLong()
     {
         $queryData = array(
             'verb'  => "ListRecords",
             'metadataPrefix' => 'oai_dc',
             'from'  => '2017-09-09T12:00:00Z',
-            'until' => '2017-12-31T23:59:59Z',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListRecords',
-                $contents
+            $this->checkXpathReturnsExactly(
+                '/o:OAI-PMH/o:ListRecords/o:record',
+                $contents,
+                2
             ),
-            "Answer does not include exactly one ListRecords tag"
+            "Answer does not include exactly two record tags"
         );
     }
 
@@ -728,6 +729,28 @@ class DefaultControllerTest extends WebTestCase
     }
 
     /**
+     * date must be valid
+     */
+    public function testListRecordsbadArgument4()
+    {
+        $queryData = array(
+            'verb'  => "ListRecords",
+            'metadataPrefix' => 'oai_dc',
+            'resumptionToken' => 'token123',
+            'until' => '2017-13-12',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
      * We do not support resumptionTokens
      * @todo If we do that, this test case must be rewritten
      * and a testcase for a successful resumption token added.
@@ -735,6 +758,7 @@ class DefaultControllerTest extends WebTestCase
     public function testListRecordsBadResumptionToken()
     {
         $queryData = array(
+            'verb' => 'ListRecords',
             'resumptionToken' => 'token123',
         );
         $contents = $this->getGetAndPost("/", $queryData);
@@ -777,16 +801,19 @@ class DefaultControllerTest extends WebTestCase
     {
         $queryData = array(
             'verb'  => "ListRecords",
-            'metadataPrefix' => 'oai_nonexistingschema',
+            'metadataPrefix' => 'oai_dc',
+            'until' => '1970-12-10',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
+            $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:error[@code="noRecordsMatch"]',
-                $contents
+                $contents,
+                0
             ),
-            "Answer does not include exactly one error tag with code 'noRecordsMatch'"
+            "Answer does not include exactly one error tag with code 'noRecordsMatch'",
+            0
         );
     }
 
