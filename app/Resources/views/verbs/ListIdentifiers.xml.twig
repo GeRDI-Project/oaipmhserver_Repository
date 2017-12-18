@@ -1,0 +1,11 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+  <ListIdentifiers>
+{% for item in items %}
+    <header>
+      <identifier>oai:{{ baseUrl }}:{{ item.id }}</identifier> 
+      <datestamp>{{ item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
+    </header> 
+{% endfor %}
+  </ListIdentifiers>
+{% endblock %}

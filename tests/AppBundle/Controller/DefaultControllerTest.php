@@ -54,7 +54,7 @@ class DefaultControllerTest extends WebTestCase
         );
     }
 
-    public function checkXpathReturnsExactlyOne(string $xpathQuery, array $contents)
+    public function checkXpathReturnsExactly(string $xpathQuery, array $contents, int $number)
     {
         $xml = new DOMDocument();
         foreach ($contents as $content) {
@@ -65,11 +65,16 @@ class DefaultControllerTest extends WebTestCase
             $xpath->registerNamespace("o", "http://www.openarchives.org/OAI/2.0/");
             $xpath->registerNamespace("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc/");
             $result = $xpath->query($xpathQuery, $xml->documentElement);
-            if ($result->length != 1) {
+            if ($result->length != $number) {
                 return false;
             }
             return true;
         }
+    }
+
+    public function checkXpathReturnsExactlyOne(string $xpathQuery, array $contents)
+    {
+        return $this->checkXpathReturnsExactly($xpathQuery, $contents, 1);
     }
 
     public function testBadVerb()
@@ -249,7 +254,7 @@ class DefaultControllerTest extends WebTestCase
     {
         $queryData = array(
             'verb'  => "ListMetadataFormats",
-            'identifier' => 'oai:www.alpendac.eu:2',
+            'identifier' => 'oai:www.alpendac.eu:4',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -320,7 +325,7 @@ class DefaultControllerTest extends WebTestCase
     {
         $queryData = array(
             'verb'  => "GetRecord",
-            'identifier' => 'oai:www.alpendac.eu:2',
+            'identifier' => 'oai:www.alpendac.eu:4',
             'metadataPrefix' => 'oai_dc',
         );
         $contents = $this->getGetAndPost("/", $queryData);
@@ -369,7 +374,7 @@ class DefaultControllerTest extends WebTestCase
             "Answer does not include exactly one error tag with code 'idDoesNotExist'"
         );
     }
-/*
+
     public function testListIdentifiersMin()
     {
         $queryData = array(
@@ -379,11 +384,12 @@ class DefaultControllerTest extends WebTestCase
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListIdentifiers',
-                $contents
+            $this->checkXpathReturnsExactly(
+                '/o:OAI-PMH/o:ListIdentifiers/o:header',
+                $contents,
+                3
             ),
-            "Answer does not include exactly one ListIdentifiers tag"
+            "Answer does not include exactly three header tags"
         );
     }
 
@@ -399,10 +405,29 @@ class DefaultControllerTest extends WebTestCase
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:ListIdentifiers',
+                '/o:OAI-PMH/o:ListIdentifiers/o:header',
                 $contents
             ),
-            "Answer does not include exactly one ListIdentifiers tag"
+            "Answer does not include exactly one header tag"
+        );
+    }
+
+    public function testListIdentifiersFromLong()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'from'  => '2017-09-09T12:00:00Z',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactly(
+                '/o:OAI-PMH/o:ListIdentifiers/o:header',
+                $contents,
+                2
+            ),
+            "Answer does not include exactly two header tags"
         );
     }
 
@@ -472,6 +497,28 @@ class DefaultControllerTest extends WebTestCase
     }
 
     /**
+     * date must be valid
+     */
+    public function testListIdentifiersbadArgument4()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'metadataPrefix' => 'oai_dc',
+            'resumptionToken' => 'token123',
+            'until' => '2017-13-12',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
      * We do not support resumptionTokens
      * @todo If we do that, this test case must be rewritten
      * and a testcase for a successful resumption token added.
@@ -479,6 +526,7 @@ class DefaultControllerTest extends WebTestCase
     public function testListIdentifiersBadResumptionToken()
     {
         $queryData = array(
+            'verb' => 'ListIdentifiers',
             'resumptionToken' => 'token123',
         );
         $contents = $this->getGetAndPost("/", $queryData);
@@ -521,16 +569,19 @@ class DefaultControllerTest extends WebTestCase
     {
         $queryData = array(
             'verb'  => "ListIdentifiers",
-            'metadataPrefix' => 'oai_nonexistingschema',
+            'metadataPrefix' => 'oai_dc',
+            'until' => '1970-12-10',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
+            $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:error[@code="noRecordsMatch"]',
-                $contents
+                $contents,
+                0
             ),
-            "Answer does not include exactly one error tag with code 'noRecordsMatch'"
+            "Answer does not include exactly one error tag with code 'noRecordsMatch'",
+            0
         );
     }
 

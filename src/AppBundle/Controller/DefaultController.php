@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\Item;
 use AppBundle\Entity\Record;
+use \DateTime;
 
 class DefaultController extends Controller
 {
@@ -33,6 +34,9 @@ class DefaultController extends Controller
                 break;
             case "GetRecord":
                 $response->setContent($this->oaiGetRecord($request, $params));
+                break;
+            case "ListIdentifiers":
+                $response->setContent($this->oaiListIdentifiers($request, $params));
                 break;
             default:
                 $response->setContent(
@@ -170,7 +174,71 @@ class DefaultController extends Controller
             "params" => $params,
         ));
     }
+    
+    public function oaiListIdentifiers(Request $request, array $params)
+    {
+        $error = false;
+        //Check for badArguments
+        if ((! $request->query->has("metadataPrefix")
+                and ! $request->query->has("resumptionToken"))
+            or count($request->query) != count($params)
+            or count($params) > 2 and $request->query->has("resumptionToken")) {
+            $template = 'errors/badArgument.xml.twig';
+            $error = true;
+        }
 
+        //Check whether there is a set-selection (not supported yet)
+        if (! $error and isset($params["set"])) {
+            $template = 'errors/noSetHierarchy.xml.twig';
+            $error = true;
+        }
+
+        //Check for a resumptionToken (not supported yet)
+        if (! $error and isset($params["resumptionToken"])) {
+            $template = 'errors/badResumptionToken.xml.twig';
+            $error = true;
+        }
+
+        if ($error) {
+            return $this->renderView($template, array("params" => $params));
+        }
+        
+
+        $items = $this->getDoctrine()
+           ->getRepository('AppBundle:Item')
+           ->findAll();
+
+        $retItems = array();
+        foreach ($items as $item) {
+            if (!$this->insideDateSelection($item, $params)) {
+                continue;
+            }
+            //check whether metadataPrefix is available for item
+            foreach ($item->getRecords() as $record) {
+                if ($record->getMetadataFormat()->getMetadataPrefix()
+                    == $request->query->get("metadataPrefix")) {
+                    $retItems[] = $item;
+                }
+            }
+        }
+        if (count($retItems) == 0) {
+            return $this->renderView(
+                'errors/cannotDisseminateFormat.xml.twig',
+                array(
+                    "params" => $params,
+                )
+            );
+        } else {
+            return $this->renderView(
+                'verbs/ListIdentifiers.xml.twig',
+                array(
+                    "params" => $params,
+                    "items"  => $retItems,
+                    "baseUrl" => $this->getRepositoryBaseUrl()
+                )
+            );
+        }
+    }
     /**
      * @todo find suitable class for these functions
      */
@@ -183,6 +251,36 @@ class DefaultController extends Controller
             ->getBaseUrl();
     }
 
+    public function insideDateSelection(Item $item, array $params)
+    {
+        if (!isset($params["from"]) and !isset($params["until"])) {
+            return true;
+        }
+        $checkDates = array("from" => false, "until" => false);
+        foreach ($checkDates as $key => $value) {
+            if (isset($params[$key])) {
+                $checkDates[$key] = DateTime::createFromFormat(
+                    'Y-m-d\TH:i:sZ',
+                    $params[$key]
+                );
+                if (! $checkDates[$key]) {
+                    $checkDates[$key] = DateTime::createFromFormat(
+                        'Y-m-d',
+                        $params[$key]
+                    );
+                }
+            }
+        }
+        if ($checkDates["from"]
+            and $item->getTimestamp() < $checkDates["from"]) {
+            return false;
+        } elseif ($checkDates["until"]
+            and $item->getTimestamp() > $checkDates["until"]) {
+            return false;
+        }
+        return true;
+
+    }
     public function cleanOAIPMHkeys(array $oaipmhkeys)
     {
         foreach ($oaipmhkeys as $key => $value) {
@@ -198,16 +296,36 @@ class DefaultController extends Controller
                 }
             }
             switch ($key) {
-                case "from":
                 case "identifier":
                 case "metadataPrefix":
                 case "resumptionToken":
                 case "set":
-                case "until":
                     continue 2;
+                case "from":
+                case "until":
+                    if ($this->validateOaiDate($oaipmhkeys[$key])) {
+                        continue 2;
+                    }
             }
             unset($oaipmhkeys[$key]);
         }
         return $oaipmhkeys;
+    }
+
+    protected function validateOaiDate(String $date)
+    {
+        $long = DateTime::createFromFormat(
+            'Y-m-d\TH:i:sZ',
+            $date
+        );
+        if ($long && $long->format('Y-m-d\TH:i:sZ')) {
+            return true;
+        } else {
+            $short = DateTime::createFromFormat(
+                'Y-m-d',
+                $date
+            );
+            return $short && $short->format('Y-m-d') == $date;
+        }
     }
 }
