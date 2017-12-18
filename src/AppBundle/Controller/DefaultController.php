@@ -36,7 +36,6 @@ class DefaultController extends Controller
                 $response->setContent($this->oaiGetRecord($request, $params));
                 break;
             case "ListIdentifiers":
-                var_dump($params);
                 $response->setContent($this->oaiListIdentifiers($request, $params));
                 break;
             case "ListRecords":

@@ -154,11 +154,13 @@ class OAIUtils
         }
         foreach (OAIUtils::getRequiredParamsForVerb($verb) as $req) {
             if (!array_key_exists($req, $params)) {
-                return true;
+                if (!$req == "metadataPrefix" or !array_key_exists("resumptionToken", $params)) {
+                    return true;
+                }
             }
         }
         foreach (OAIUtils::getExclusiveParamsForVerb($verb) as $excl) {
-            if (array_key_exists($excl, $params) and count(params) > 2) {
+            if (array_key_exists($excl, $params) and count($params) > 2) {
                 return true;
             }
         }
