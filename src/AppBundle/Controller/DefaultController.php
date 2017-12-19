@@ -19,72 +19,72 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         $response = new Response();
-        //params is only for the view, since the validation fails if given params
-        //are not valid
         $params = OAIUtils::cleanOAIkeys($request->query->all());
-        switch ($request->query->get('verb')) {
-            case "Identify":
-                $response->setContent($this->oaiIdentify($request, $params));
-                break;
-            case "ListSets":
-                $response->setContent($this->oaiListSets($request, $params));
-                break;
-            case "ListMetadataFormats":
-                $response->setContent($this->oaiListMetadataFormats($request, $params));
-                break;
-            case "GetRecord":
-                $response->setContent($this->oaiGetRecord($request, $params));
-                break;
-            case "ListIdentifiers":
-                $response->setContent($this->oaiListIdentifiers($request, $params));
-                break;
-            case "ListRecords":
-                $response->setContent($this->oaiListRecords($request, $params));
-                break;
-            default:
-                if (! $request->query->has("verb")) {
-                    $message = "No verb given";
-                } else {
-                    $message = "Verb " . $request->query->get("verb") . " unknown";
-                }
+        // Check whether the right arguments are given
+        if ($request->query->has("verb")) {
+            if (OAIUtils::badArgumentsForVerb(
+                $request->query->all(),
+                $request->query->get("verb")
+            )) {
                 $response->setContent(
-                    $this->renderView('errors/badVerb.xml.twig', array(
+                    $this->renderView('errors/badArgument.xml.twig', array(
                         "params" => $params,
-                        "message" => $message
                     ))
                 );
+            } else {
+                switch ($request->query->get('verb')) {
+                    case "Identify":
+                        $response->setContent($this->oaiIdentify($params));
+                        break;
+                    case "ListSets":
+                        $response->setContent($this->oaiListSets($params));
+                        break;
+                    case "ListMetadataFormats":
+                        $response->setContent($this->oaiListMetadataFormats($request, $params));
+                        break;
+                    case "GetRecord":
+                        $response->setContent($this->oaiGetRecord($request, $params));
+                        break;
+                    case "ListIdentifiers":
+                        $response->setContent($this->oaiListIdentifiers($request, $params));
+                        break;
+                    case "ListRecords":
+                        $response->setContent($this->oaiListRecords($request, $params));
+                        break;
+                    default:
+                        $response->setContent(
+                            $this->renderView('errors/badVerb.xml.twig', array(
+                                "params" => $params,
+                                "message" => "Verb ".$request->query->get("verb")." unknown"
+                            ))
+                        );
+                }
+            }
+        } else {
+            $response->setContent(
+                $this->renderView('errors/badVerb.xml.twig', array(
+                    "params" => $params,
+                    "message" => "No verb given",
+                ))
+            );
         }
         $response->headers->set("Content-Type", "text/xml");
         return $response;
     }
 
-    protected function oaiIdentify(Request $request, array $params)
+    protected function oaiIdentify(array $params)
     {
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "Identify")) {
-            $template = 'errors/badArgument.xml.twig';
-        } else {
-            $template = 'verbs/Identify.xml.twig';
-        }
         $repository = $this->getDoctrine()
             ->getRepository('AppBundle:Repository')
             ->findOneById(1);
-        return $this->renderView($template, array(
+        return $this->renderView('verbs/Identify.xml.twig', array(
             "params" => $params,
             "repository" => $repository,
         ));
     }
 
-    protected function oaiListSets(Request $request, array $params)
+    protected function oaiListSets(array $params)
     {
-        /**
-        if ($request->query->count() !=  1 or
-            ($request->query->count() == 2 and ! $request->query->has('resumptionToken'))) {
-         */
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListSets")) {
-                return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-                ));
-        }
         return $this->renderView('errors/noSetHierarchy.xml.twig', array(
                 "params" => $params
             ));
@@ -92,11 +92,6 @@ class DefaultController extends Controller
 
     protected function oaiListMetadataFormats(Request $request, array $params)
     {
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListMetadataFormats")) {
-                return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-                ));
-        }
         /* Two modes are possible:
          * Either identifier is set, so we retrieve all MetadataFormats for
          * identifier */
@@ -143,11 +138,6 @@ class DefaultController extends Controller
 
     public function oaiGetRecord(Request $request, array $params)
     {
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "GetRecord")) {
-                return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-                ));
-        }
         //Check if id exists
         $baseUrl = $this->getRepositoryBaseUrl();
         if (preg_match(
@@ -191,12 +181,6 @@ class DefaultController extends Controller
     
     public function oaiListIdentifiers(Request $request, array $params)
     {
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListIdentifiers")) {
-                return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-                ));
-        }
-
         $error = false;
         //Check whether there is a set-selection (not supported yet)
         if (! $error and isset($params["set"])) {
@@ -252,11 +236,6 @@ class DefaultController extends Controller
 
     public function oaiListRecords(Request $request, array $params)
     {
-        if (OAIUtils::badArgumentsForVerb($request->query->all(), "ListIdentifiers")) {
-                return $this->renderView('errors/badArgument.xml.twig', array(
-                    "params" => $params,
-                ));
-        }
         $error = false;
 
         //Check whether there is a set-selection (not supported yet)
