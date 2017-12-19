@@ -156,14 +156,14 @@ class OAIUtils
         foreach (OAIUtils::getRequiredParamsForVerb($verb) as $req) {
             if (!array_key_exists($req, $params)) {
                 if (!$req == "metadataPrefix" or !array_key_exists("resumptionToken", $params)) {
-                    $reason = "$req has to be set when verb is $verb";
+                    $reason = "Parameter '$req' has to be set when verb is '$verb'";
                     return true;
                 }
             }
         }
         foreach (OAIUtils::getExclusiveParamsForVerb($verb) as $excl) {
             if (array_key_exists($excl, $params) and count($params) > 2) {
-                $reason = "$excl is an exclusive parameter when called with $verb";
+                $reason = "'$excl' is an exclusive parameter when called with '$verb'";
                 return true;
             }
         }
@@ -172,8 +172,8 @@ class OAIUtils
         foreach ($dateFields as $dateField) {
             if (isset($params[$dateField])
                 and !OAIUtils::validateOaiDate($params[$dateField])) {
-                $reason =   "$dateField is not a valid date!";
-                $reason .=  "Allowed formats: YYYY-MM-DD or  YYYY-MM-DDThh:mm:ssZ";
+                $reason =  "'" . $params[$dateField]."' is not a valid date!";
+                $reason .=  " Allowed formats: 'YYYY-MM-DD' or 'YYYY-MM-DDThh:mm:ssZ' (ISO 8601)";
                 return true;
             }
         }
