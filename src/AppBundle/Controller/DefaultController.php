@@ -40,16 +40,16 @@ class DefaultController extends Controller
                         $response->setContent($this->oaiListSets($params));
                         break;
                     case "ListMetadataFormats":
-                        $response->setContent($this->oaiListMetadataFormats($request, $params));
+                        $response->setContent($this->oaiListMetadataFormats($params));
                         break;
                     case "GetRecord":
-                        $response->setContent($this->oaiGetRecord($request, $params));
+                        $response->setContent($this->oaiGetRecord($params));
                         break;
                     case "ListIdentifiers":
-                        $response->setContent($this->oaiListIdentifiers($request, $params));
+                        $response->setContent($this->oaiListIdentifiers($params));
                         break;
                     case "ListRecords":
-                        $response->setContent($this->oaiListRecords($request, $params));
+                        $response->setContent($this->oaiListRecords($params));
                         break;
                     default:
                         $response->setContent(
@@ -90,16 +90,16 @@ class DefaultController extends Controller
             ));
     }
 
-    protected function oaiListMetadataFormats(Request $request, array $params)
+    protected function oaiListMetadataFormats(array $params)
     {
         /* Two modes are possible:
          * Either identifier is set, so we retrieve all MetadataFormats for
          * identifier */
-        if ($request->query->has('identifier')) {
+        if (isset($params['identifier'])) {
             $baseUrl = $this->getRepositoryBaseUrl();
             if (preg_match(
                 "/^oai:$baseUrl:(\d+)$/",
-                $request->query->get('identifier'),
+                $params['identifier'],
                 $matches
             )) {
                 $item = $this->getDoctrine()
@@ -136,13 +136,13 @@ class DefaultController extends Controller
         }
     }
 
-    public function oaiGetRecord(Request $request, array $params)
+    public function oaiGetRecord(array $params)
     {
         //Check if id exists
         $baseUrl = $this->getRepositoryBaseUrl();
         if (preg_match(
             "/^oai:$baseUrl:(\d+)$/",
-            $request->query->get('identifier'),
+            $params['identifier'],
             $matches
         )) {
             $item = $this->getDoctrine()
@@ -179,7 +179,7 @@ class DefaultController extends Controller
         ));
     }
     
-    public function oaiListIdentifiers(Request $request, array $params)
+    public function oaiListIdentifiers(array $params)
     {
         $error = false;
         //Check whether there is a set-selection (not supported yet)
@@ -210,7 +210,7 @@ class DefaultController extends Controller
             //check whether metadataPrefix is available for item
             foreach ($item->getRecords() as $record) {
                 if ($record->getMetadataFormat()->getMetadataPrefix()
-                    == $request->query->get("metadataPrefix")) {
+                    == $params["metadataPrefix"]) {
                     $retItems[] = $item;
                 }
             }
@@ -234,7 +234,7 @@ class DefaultController extends Controller
         }
     }
 
-    public function oaiListRecords(Request $request, array $params)
+    public function oaiListRecords(array $params)
     {
         $error = false;
 
@@ -267,7 +267,7 @@ class DefaultController extends Controller
             //check whether metadataPrefix is available for item
             foreach ($item->getRecords() as $record) {
                 if ($record->getMetadataFormat()->getMetadataPrefix()
-                    == $request->query->get("metadataPrefix")) {
+                    == $params["metadataPrefix"]) {
                     $val["item"] = $item;
                     $val["record"] = $record;
                     $retVal[] = $val;
