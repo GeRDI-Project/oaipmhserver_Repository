@@ -21,14 +21,17 @@ class DefaultController extends Controller
         $response = new Response();
         $params = OAIUtils::cleanOAIkeys($request->query->all());
         // Check whether the right arguments are given
+        $reason = "";
         if ($request->query->has("verb")) {
             if (OAIUtils::badArgumentsForVerb(
                 $request->query->all(),
-                $request->query->get("verb")
+                $request->query->get("verb"),
+                $reason
             )) {
                 $response->setContent(
                     $this->renderView('errors/badArgument.xml.twig', array(
                         "params" => $params,
+                        "reason" => $reason
                     ))
                 );
             } else {
