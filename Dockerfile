@@ -1,9 +1,10 @@
 FROM fauria/lamp 
 
 ADD . /app
-ADD util/run-lamp.sh /usr/sbin/run-lamp.sh
 
 RUN /app/util/prepareImage.sh
+
+ADD app/config/config.yml.deploy /app/app/config/config.yml
 
 RUN /app/bin/console cache:clear
 RUN /app/bin/console cache:warmup
