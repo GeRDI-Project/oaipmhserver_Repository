@@ -83,41 +83,41 @@ class OAIUtils
 
     protected static function paramIsAllowedForVerb(String $param, String $verb)
     {
+        $isAllowed = false;
         switch ($param) {
             case "identifier":
                 if ($verb == "ListMetadataFormats"
-                    or  $verb == "GetRecords") {
-                    return true;
+                    or  $verb == "GetRecord") {
+                    $isAllowed = true;
                 }
-                // no break
+                break;
             case "metadataPrefix":
-                if ($verb == "GetRecords"
+                if ($verb == "GetRecord"
                     or  $verb == "ListIdentifiers"
                     or  $verb == "ListRecords") {
-                    return true;
+                    $isAllowed = true;
                 }
-                // no break
+                break;
             case "from":
             case "until":
             case "set":
                 if ($verb == "ListIdentifiers"
                     or  $verb == "ListRecords") {
-                    return true;
+                    $isAllowed = true;
                 }
-                // no break
+                break;
             case "resumptionToken":
                 if ($verb == "ListIdentifiers"
                     or  $verb == "ListRecords"
                     or  $verb == "ListSets") {
-                    return true;
+                    $isAllowed = true;
                 }
-                //no break
+                break;
             case "verb":
-                return true;
-                //no break
-            default:
-                return false;
+                $isAllowed = true;
+                break;
         }
+        return $isAllowed;
     }
 
     protected static function getRequiredParamsForVerb(String $verb)
