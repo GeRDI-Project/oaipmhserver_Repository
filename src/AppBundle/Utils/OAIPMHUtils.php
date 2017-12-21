@@ -7,8 +7,24 @@ use AppBundle\Entity\Item;
 use \DateTime;
 use \Exception;
 
-class OAIUtils
+/**
+ * OAIPMHUtils
+ *
+ * Helper classes for OAIPMH specific tasks. All methods should be static
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+class OAIPMHUtils
 {
+    /**
+     * Checks whether items timestamp matches the until/from selection
+     *
+     * @param AppBundle\Entitiy\Item $item
+     * @param array $params
+     *
+     * @return bool
+     */
     public static function isItemTimestampInsideDateSelection(Item $item, array $params)
     {
         if (!isset($params["from"]) and !isset($params["until"])) {
@@ -31,9 +47,20 @@ class OAIUtils
         return true;
     }
 
-    public static function cleanOAIkeys(array $oaikeys)
+    /**
+     * Returns a cleansed version of the given associative array:
+     * only valid OAIPMH-params are returned.
+     * All keys are checked. Values are only checked, if a specific value
+     * would hinder the validation of the rendered xml (unvalid OAIPMH dates
+     * or verbs)
+     *
+     * @param array $oaipmhkeys Associative array holding the requested params
+     *
+     * @return array The subset of $oaipmhkeys that are valid keys
+     */
+    public static function cleanOAIPMHkeys(array $oaipmhkeys)
     {
-        foreach ($oaikeys as $key => $value) {
+        foreach ($oaipmhkeys as $key => $value) {
             if ($key == "verb") {
                 switch ($value) {
                     case "Identify":
@@ -53,16 +80,24 @@ class OAIUtils
                     continue 2;
                 case "from":
                 case "until":
-                    if (OAIUtils::validateOaiDate($oaikeys[$key])) {
+                    if (OAIPMHUtils::validateOAIPMHDate($oaipmhkeys[$key])) {
                         continue 2;
                     }
             }
-            unset($oaikeys[$key]);
+            unset($oaipmhkeys[$key]);
         }
-        return $oaikeys;
+        return $oaipmhkeys;
     }
 
-    public static function validateOaiDate(String $dateString)
+    /**
+     * Checks whether the given string is a parsable and valid OAIPMH date
+     * ('YYYY-MM-DD' or 'YYYY-MM-DDThh:mm:ssZ')
+     *
+     * @param String $dateString The date as a string
+     *
+     * @return bool
+     */
+    public static function validateOAIPMHDate(String $dateString)
     {
         try {
             $date = new DateTime($dateString);
@@ -81,6 +116,14 @@ class OAIUtils
         return false;
     }
 
+    /**
+     * Checks whether the given parameter is allowed for the verb of the OAIPMH request
+     *
+     * @param string $param
+     * @param string $verb
+     *
+     * @return bool
+     */
     protected static function paramIsAllowedForVerb(String $param, String $verb)
     {
         $isAllowed = false;
@@ -119,7 +162,14 @@ class OAIUtils
         }
         return $isAllowed;
     }
-
+    
+    /**
+     * Returns the params required for the given verb
+     *
+     * @param String $verb
+     *
+     * @return array All required params in an array
+     */
     protected static function getRequiredParamsForVerb(String $verb)
     {
         switch ($verb) {
@@ -133,6 +183,13 @@ class OAIUtils
         }
     }
      
+    /**
+     * Returns the params that are exclusive for the given verb
+     *
+     * @param String $verb
+     *
+     * @return array All exclusive params in an array
+     */
     protected static function getExclusiveParamsForVerb(String $verb)
     {
         switch ($verb) {
@@ -145,15 +202,25 @@ class OAIUtils
         }
     }
 
+    /**
+     * Checks whether the given params are valid for the given verb.
+     * If the validation fails a reason is stored in $reason
+     *
+     * @param array $params Associative array of params requested with a verb
+     * @param String $verb
+     * @param String $reason Will be overwritten (call-by-address)
+     *
+     * @return bool
+     */
     public static function badArgumentsForVerb(array $params, String $verb, String &$reason)
     {
         foreach ($params as $key => $value) {
-            if (!OAIUtils::paramIsAllowedForVerb($key, $verb)) {
+            if (!OAIPMHUtils::paramIsAllowedForVerb($key, $verb)) {
                 $reason = "$key is not allowed for verb $verb!";
                 return true;
             }
         }
-        foreach (OAIUtils::getRequiredParamsForVerb($verb) as $req) {
+        foreach (OAIPMHUtils::getRequiredParamsForVerb($verb) as $req) {
             if (!array_key_exists($req, $params)) {
                 if (!$req == "metadataPrefix" or !array_key_exists("resumptionToken", $params)) {
                     $reason = "Parameter '$req' has to be set when verb is '$verb'";
@@ -161,7 +228,7 @@ class OAIUtils
                 }
             }
         }
-        foreach (OAIUtils::getExclusiveParamsForVerb($verb) as $excl) {
+        foreach (OAIPMHUtils::getExclusiveParamsForVerb($verb) as $excl) {
             if (array_key_exists($excl, $params) and count($params) > 2) {
                 $reason = "'$excl' is an exclusive parameter when called with '$verb'";
                 return true;
@@ -171,7 +238,7 @@ class OAIUtils
         $dateFields = array("from", "until");
         foreach ($dateFields as $dateField) {
             if (isset($params[$dateField])
-                and !OAIUtils::validateOaiDate($params[$dateField])) {
+                and !OAIPMHUtils::validateOAIPMHDate($params[$dateField])) {
                 $reason =  "'" . $params[$dateField]."' is not a valid date!";
                 $reason .=  " Allowed formats: 'YYYY-MM-DD' or 'YYYY-MM-DDThh:mm:ssZ' (ISO 8601)";
                 return true;

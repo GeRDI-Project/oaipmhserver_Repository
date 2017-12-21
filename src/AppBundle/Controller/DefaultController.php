@@ -8,22 +8,21 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\Item;
 use AppBundle\Entity\Record;
-use AppBundle\Utils\OAIUtils;
+use AppBundle\Utils\OAIPMHUtils;
 
 class DefaultController extends Controller
 {
     /**
      * @Route("/", name="oaipmh-server")
-     * @todo implement fixtures for tests
      */
     public function indexAction(Request $request)
     {
         $response = new Response();
-        $params = OAIUtils::cleanOAIkeys($request->query->all());
+        $params = OAIPMHUtils::cleanOAIPMHkeys($request->query->all());
         // Check whether the right arguments are given
         $reason = "";
         if ($request->query->has("verb")) {
-            if (OAIUtils::badArgumentsForVerb(
+            if (OAIPMHUtils::badArgumentsForVerb(
                 $request->query->all(),
                 $request->query->get("verb"),
                 $reason
@@ -207,7 +206,7 @@ class DefaultController extends Controller
 
         $retItems = array();
         foreach ($items as $item) {
-            if (!OAIUtils::isItemTimestampInsideDateSelection($item, $params)) {
+            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
             }
             //check whether metadataPrefix is available for item
@@ -264,7 +263,7 @@ class DefaultController extends Controller
 
         $retVal = array();
         foreach ($items as $item) {
-            if (!OAIUtils::isItemTimestampInsideDateSelection($item, $params)) {
+            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
             }
             //check whether metadataPrefix is available for item
