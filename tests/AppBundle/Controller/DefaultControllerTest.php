@@ -1,8 +1,17 @@
 <?php
-namespace Oaipmh\Server\Tests\Controller;
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+namespace AppBundle\Tests\Controller;
 
 class DefaultControllerTest extends DefaultControllerAbstractTest
 {
+    /**
+     * Test whether badVerb reply is triggered if a non-valid verb is given
+     */
     public function testBadVerb()
     {
         $queryData = array(
@@ -19,6 +28,9 @@ class DefaultControllerTest extends DefaultControllerAbstractTest
         );
     }
 
+    /**
+     * Test whether badVerb is triggered if no verb is given
+     */
     public function testNoVerb()
     {
         $queryData = array();

@@ -1,8 +1,18 @@
 <?php
-namespace Oaipmh\Server\Tests\Controller;
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+namespace AppBundle\Tests\Controller;
 
 class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
 {
+    /**
+     * Test a valid minimal ListRecords request for which 3 items are in the
+     * test database
+     */
     public function testListRecordsMin()
     {
         $queryData = array(
@@ -21,6 +31,10 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
         );
     }
 
+    /**
+     * Test a valid request with short dates.
+     * 1 item in the testdatabase should match
+     */
     public function testListRecordsFromUntilShort()
     {
         $queryData = array(
@@ -40,6 +54,10 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
         );
     }
 
+    /**
+     * Test a valid request with only one date in long format.
+     * 2 items in the test database should match
+     */
     public function testListRecordsFromLong()
     {
         $queryData = array(

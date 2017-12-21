@@ -1,8 +1,17 @@
 <?php
-namespace Oaipmh\Server\Tests\Controller;
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+namespace AppBundle\Tests\Controller;
 
 class DefaultControllerIdentifyTest extends DefaultControllerAbstractTest
 {
+    /**
+     * test a normal and valid Identify request
+     */
     public function testIdentify()
     {
         $queryData = array(
@@ -20,6 +29,9 @@ class DefaultControllerIdentifyTest extends DefaultControllerAbstractTest
 
     }
 
+    /**
+     * test whether badArgument reply is triggered if a random param is set
+     */
     public function testIdentifyBadArgument()
     {
         $queryData = array(

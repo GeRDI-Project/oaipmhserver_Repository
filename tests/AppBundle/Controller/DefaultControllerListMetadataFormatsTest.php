@@ -1,8 +1,19 @@
 <?php
-namespace Oaipmh\Server\Tests\Controller;
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+namespace AppBundle\Tests\Controller;
 
 class DefaultControllerListMetadataFormatsTest extends DefaultControllerAbstractTest
 {
+    /**
+     * Check whether a valid minimal request returns successfully
+     *
+     * @todo If we start to support more metadata schemes we have to rewrite this test
+     */
     public function testListMetadataFormats()
     {
         $queryData = array(
@@ -20,6 +31,12 @@ class DefaultControllerListMetadataFormatsTest extends DefaultControllerAbstract
         
     }
 
+    /**
+     * test whether a valid request for metadataFormats for a specific identifier returns successfully.
+     *
+     *
+     * @todo If we start to support more metadata schemes we have to rewrite this test
+     */
     public function testListMetadataFormatsWithIdExists()
     {
         $queryData = array(
@@ -37,11 +54,14 @@ class DefaultControllerListMetadataFormatsTest extends DefaultControllerAbstract
         );
     }
 
+    /**
+     * Check whether idDoesNotExist is triggered if a not well-defined identifier is given
+     */
     public function testListMetadataFormatsIdDoesNotExist1()
     {
         $queryData = array(
             'verb'  => "ListMetadataFormats",
-            'identifier' => 'oai:www.alpendac.eu:xyz',
+            'identifier' => 'asdjbaskdbaskjdbkajsb',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -54,6 +74,9 @@ class DefaultControllerListMetadataFormatsTest extends DefaultControllerAbstract
         );
     }
 
+    /**
+     * Check whether idDoesNotExist is triggered if a well-defined but not-existing identifier is given
+     */
     public function testListMetadataFormatsIdDoesNotExist2()
     {
         $queryData = array(
@@ -71,6 +94,9 @@ class DefaultControllerListMetadataFormatsTest extends DefaultControllerAbstract
         );
     }
 
+    /**
+     * Check whether noMetadataFormats reply is triggered if an item without record in the testdatabase is requested
+     */
     public function testListMetadataFormatsNoMetadataFormats()
     {
         $queryData = array(

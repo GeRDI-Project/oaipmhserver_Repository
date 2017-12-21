@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
 namespace AppBundle\Utils;
 
 use Symfony\Component\Debug\Exception\HandledErrorException;
@@ -12,8 +17,6 @@ use \Exception;
  *
  * Helper classes for OAIPMH specific tasks. All methods should be static
  *
- * @author  Tobias Weber <weber@lrz.de>
- * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 class OAIPMHUtils
 {

@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
 namespace AppBundle\Controller;
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -10,9 +15,16 @@ use AppBundle\Entity\Item;
 use AppBundle\Entity\Record;
 use AppBundle\Utils\OAIPMHUtils;
 
+/**
+ *
+ * DefaultController for routes that should react like a OAI-PMH server 
+ *
+ */
 class DefaultController extends Controller
 {
     /**
+     * { @inheritDoc }
+     * This is the default symfony action for a route
      * @Route("/", name="oaipmh-server")
      */
     public function indexAction(Request $request)
@@ -36,22 +48,22 @@ class DefaultController extends Controller
             } else {
                 switch ($request->query->get('verb')) {
                     case "Identify":
-                        $response->setContent($this->oaiIdentify($params));
+                        $response->setContent($this->oaipmhIdentify($params));
                         break;
                     case "ListSets":
-                        $response->setContent($this->oaiListSets($params));
+                        $response->setContent($this->oaipmhListSets($params));
                         break;
                     case "ListMetadataFormats":
-                        $response->setContent($this->oaiListMetadataFormats($params));
+                        $response->setContent($this->oaipmhListMetadataFormats($params));
                         break;
                     case "GetRecord":
-                        $response->setContent($this->oaiGetRecord($params));
+                        $response->setContent($this->oaipmhGetRecord($params));
                         break;
                     case "ListIdentifiers":
-                        $response->setContent($this->oaiListIdentifiers($params));
+                        $response->setContent($this->oaipmhListIdentifiers($params));
                         break;
                     case "ListRecords":
-                        $response->setContent($this->oaiListRecords($params));
+                        $response->setContent($this->oaipmhListRecords($params));
                         break;
                     default:
                         $response->setContent(
@@ -74,7 +86,15 @@ class DefaultController extends Controller
         return $response;
     }
 
-    protected function oaiIdentify(array $params)
+    /**
+     *
+     * Processes a oaipmh - Identify request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    protected function oaipmhIdentify(array $params)
     {
         $repository = $this->getDoctrine()
             ->getRepository('AppBundle:Repository')
@@ -85,14 +105,30 @@ class DefaultController extends Controller
         ));
     }
 
-    protected function oaiListSets(array $params)
+    /**
+     *
+     * Processes a oaipmh - ListSets request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    protected function oaipmhListSets(array $params)
     {
         return $this->renderView('errors/noSetHierarchy.xml.twig', array(
                 "params" => $params
             ));
     }
 
-    protected function oaiListMetadataFormats(array $params)
+    /**
+     *
+     * Processes a oaipmh - ListMetadataFormat request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    protected function oaipmhListMetadataFormats(array $params)
     {
         /* Two modes are possible:
          * Either identifier is set, so we retrieve all MetadataFormats for
@@ -138,7 +174,15 @@ class DefaultController extends Controller
         }
     }
 
-    public function oaiGetRecord(array $params)
+    /**
+     *
+     * Processes a oaipmh - GetRecord request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    protected function oaipmhGetRecord(array $params)
     {
         //Check if id exists
         $baseUrl = $this->getRepositoryBaseUrl();
@@ -181,7 +225,15 @@ class DefaultController extends Controller
         ));
     }
     
-    public function oaiListIdentifiers(array $params)
+    /**
+     *
+     * Processes a oaipmh - ListIdentifiers request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    public function oaipmhListIdentifiers(array $params)
     {
         $error = false;
         //Check whether there is a set-selection (not supported yet)
@@ -236,7 +288,15 @@ class DefaultController extends Controller
         }
     }
 
-    public function oaiListRecords(array $params)
+    /**
+     *
+     * Processes a oaipmh - ListRecords request
+     *
+     * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @return String The payload for the http answer in xml
+     */
+    public function oaipmhListRecords(array $params)
     {
         $error = false;
 
@@ -296,10 +356,15 @@ class DefaultController extends Controller
     }
 
     /**
-     * @todo find suitable class for these functions
+     * Retrieves the base url for the repository from the database
+     *
+     * @internal This function needs to reside in the controller since it is too small
+     * for a service but needs the container to retrieve the base url
+     * dynamically.
+     *
+     * @return $string The base url
      */
-
-    public function getRepositoryBaseUrl()
+    protected function getRepositoryBaseUrl()
     {
         return $this->getDoctrine()
             ->getRepository('AppBundle:Repository')

@@ -1,9 +1,17 @@
 <?php
-namespace Oaipmh\Server\Tests\Controller;
+/**
+ * This file is part of the GeRDI software suite
+ *
+ * @author  Tobias Weber <weber@lrz.de>
+ * @license https://www.apache.org/licenses/LICENSE-2.0
+ */
+namespace AppBundle\Tests\Controller;
 
 class DefaultControllerListSetsTest extends DefaultControllerAbstractTest
 {
     /**
+     * Test whether noSetHierarchy reply is triggered if ListSets is requested
+     *
      * @todo: add an alternative "or" in assert-Statement, when Sets are supported
      */
     public function testListSets()
@@ -22,6 +30,9 @@ class DefaultControllerListSetsTest extends DefaultControllerAbstractTest
         );
     }
     
+    /**
+     * Test whether badArgument reply is triggered if a random param is given
+     */
     public function testListSetsBadArgument()
     {
         $queryData = array(
