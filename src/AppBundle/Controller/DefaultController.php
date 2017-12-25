@@ -40,37 +40,36 @@ class DefaultController extends Controller
         $params = OAIPMHUtils::cleanOAIPMHkeys($request->query->all());
         // Check whether the right arguments are given
         try {
-            if ($request->query->has("verb")) {
-                OAIPMHUtils::badArgumentsForVerb(
-                    $request->query->all(),
-                    $request->query->get("verb")
-                );
-                switch ($request->query->get('verb')) {
-                    case "Identify":
-                        $response->setContent($this->oaipmhIdentify($params));
-                        break;
-                    case "ListSets":
-                        $response->setContent($this->oaipmhListSets());
-                        break;
-                    case "ListMetadataFormats":
-                        $response->setContent($this->oaipmhListMetadataFormats($params));
-                        break;
-                    case "GetRecord":
-                        $response->setContent($this->oaipmhGetRecord($params));
-                        break;
-                    case "ListIdentifiers":
-                        $response->setContent($this->oaipmhListIdentifiers($params));
-                        break;
-                    case "ListRecords":
-                        $response->setContent($this->oaipmhListRecords($params));
-                        break;
-                    default:
-                        $badVerb = new OAIPMHBadVerbException();
-                        $badVerb->setReason("Verb ".$request->query->get("verb")." unknown");
-                        throw $badVerb;
-                }
-            } else {
+            if (!$request->query->has("verb")) {
                 throw new OAIPMHBadVerbException();
+            }
+            OAIPMHUtils::badArgumentsForVerb(
+                $request->query->all(),
+                $request->query->get("verb")
+            );
+            switch ($request->query->get('verb')) {
+                case "Identify":
+                    $response->setContent($this->oaipmhIdentify($params));
+                    break;
+                case "ListSets":
+                    $response->setContent($this->oaipmhListSets());
+                    break;
+                case "ListMetadataFormats":
+                    $response->setContent($this->oaipmhListMetadataFormats($params));
+                    break;
+                case "GetRecord":
+                    $response->setContent($this->oaipmhGetRecord($params));
+                    break;
+                case "ListIdentifiers":
+                    $response->setContent($this->oaipmhListIdentifiers($params));
+                    break;
+                case "ListRecords":
+                    $response->setContent($this->oaipmhListRecords($params));
+                    break;
+                default:
+                    $badVerb = new OAIPMHBadVerbException();
+                    $badVerb->setReason("Verb ".$request->query->get("verb")." unknown");
+                    throw $badVerb;
             }
         } catch (OAIPMHException $e) {
             $response->setContent(
@@ -193,9 +192,7 @@ class DefaultController extends Controller
             $item = $this->getDoctrine()
                 ->getRepository('AppBundle:Item')
                 ->findOneById($matches[1]);
-            if (is_null($item)) {
-                throw new OAIPMHIdDoesNotExistException($params['identifier']);
-            } else {
+            if (!is_null($item)) {
                 //Check whether requested metadataPrefix can be disseminated
                 foreach ($item->getRecords() as $record) {
                     if ($record->getMetadataFormat()->getMetadataPrefix()
@@ -210,21 +207,15 @@ class DefaultController extends Controller
                         );
                     }
                 }
-            }
-            //Nothing found to disseminate!
-            if (!isset($template)) {
+                //Nothing found to disseminate!
                 $cannotDisseminateFormat = new OAIPMHCannotDisseminateFormatException();
                 $cannotDisseminateFormat->appendReason($params["metadataPrefix"]
                     . " for item with id "
                     . $params['identifier']);
                 throw $cannotDisseminateFormat;
             }
-        } else {
-            throw new OAIPMHIdDoesNotExistException($params['identifier']);
         }
-        return $this->renderView($template, array(
-            "params" => $params,
-        ));
+        throw new OAIPMHIdDoesNotExistException($params['identifier']);
     }
     
     /**
