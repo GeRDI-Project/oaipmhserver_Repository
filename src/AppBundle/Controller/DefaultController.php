@@ -40,13 +40,7 @@ class DefaultController extends Controller
         $params = OAIPMHUtils::cleanOAIPMHkeys($request->query->all());
         // Check whether the right arguments are given
         try {
-            if (!$request->query->has("verb")) {
-                throw new OAIPMHBadVerbException();
-            }
-            OAIPMHUtils::badArgumentsForVerb(
-                $request->query->all(),
-                $request->query->get("verb")
-            );
+            OAIPMHUtils::validateOAIPMHArguments($request->query->all());
             switch ($request->query->get('verb')) {
                 case "Identify":
                     $response->setContent($this->oaipmhIdentify($params));

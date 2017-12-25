@@ -11,6 +11,7 @@ use Symfony\Component\Debug\Exception\HandledErrorException;
 use AppBundle\Entity\Item;
 use AppBundle\Exception\OAIPMHException;
 use AppBundle\Exception\OAIPMHBadArgumentException;
+use AppBundle\Exception\OAIPMHBadVerbException;
 use \DateTime;
 use \Exception;
 
@@ -219,28 +220,37 @@ class OAIPMHUtils
      *
      * @return bool
      */
-    public static function badArgumentsForVerb(array $params, String $verb)
+    public static function validateOAIPMHArguments(array $params)
     {
+        if (!isset($params["verb"])) {
+            throw new OAIPMHBadVerbException();
+        }
+
         foreach ($params as $key => $value) {
-            if (!OAIPMHUtils::paramIsAllowedForVerb($key, $verb)) {
+            if (!OAIPMHUtils::paramIsAllowedForVerb($key, $params['verb'])) {
                 $badArgument = new OAIPMHBadArgumentException();
-                $badArgument->appendReason(": $key is not allowed for verb $verb!");
+                $badArgument->appendReason(": $key is not allowed for verb"
+                   . $params['verb'] ."!");
                 throw $badArgument;
             }
         }
-        foreach (OAIPMHUtils::getRequiredParamsForVerb($verb) as $req) {
+        foreach (OAIPMHUtils::getRequiredParamsForVerb($params['verb']) as $req) {
             if (!array_key_exists($req, $params)) {
                 if (!$req == "metadataPrefix" or !array_key_exists("resumptionToken", $params)) {
                     $badArgument = new OAIPMHBadArgumentException();
-                    $badArgument->setReason(": '$req' has to be set when verb is '$verb'");
+                    $badArgument->setReason(": '$req' "
+                        . "has to be set when verb is '"
+                        . $params['verb'] . "'");
                     throw $badArgument;
                 }
             }
         }
-        foreach (OAIPMHUtils::getExclusiveParamsForVerb($verb) as $excl) {
+        foreach (OAIPMHUtils::getExclusiveParamsForVerb($params['verb']) as $excl) {
             if (array_key_exists($excl, $params) and count($params) > 2) {
                 $badArgument = new OAIPMHBadArgumentException();
-                $badArgument->appendReason(": '$excl' is an exclusive parameter when called with '$verb'");
+                $badArgument->appendReason(": '$excl' "
+                    . "is an exclusive parameter when called with '"
+                    . $params['verb'] . "'");
                 throw $badArgument;
             }
         }
