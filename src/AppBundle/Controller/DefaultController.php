@@ -217,7 +217,7 @@ class DefaultController extends Controller
         }
         throw new OAIPMHIdDoesNotExistException($params['identifier']);
     }
-    
+
     /**
      *
      * Processes a oaipmh - ListIdentifiers request
@@ -243,6 +243,7 @@ class DefaultController extends Controller
            ->findAll();
 
         $retItems = array();
+
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
@@ -255,18 +256,19 @@ class DefaultController extends Controller
                 }
             }
         }
+
         if (count($retItems) == 0) {
             throw new OAIPMHCannotDisseminateFormatException();
-        } else {
-            return $this->renderView(
-                'verbs/ListIdentifiers.xml.twig',
-                array(
-                    "params" => $params,
-                    "items"  => $retItems,
-                    "baseUrl" => $this->getRepositoryBaseUrl()
-                )
-            );
         }
+
+        return $this->renderView(
+            'verbs/ListIdentifiers.xml.twig',
+            array(
+                "params" => $params,
+                "items"  => $retItems,
+                "baseUrl" => $this->getRepositoryBaseUrl()
+            )
+        );
     }
 
     /**
@@ -296,6 +298,7 @@ class DefaultController extends Controller
            ->findAll();
 
         $retVal = array();
+
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $params)) {
                 continue;
@@ -310,18 +313,19 @@ class DefaultController extends Controller
                 }
             }
         }
+
         if (count($retVal) == 0) {
             throw new OAIPMHCannotDisseminateFormatException();
-        } else {
-            return $this->renderView(
-                'verbs/ListRecords.xml.twig',
-                array(
-                    "params" => $params,
-                    "retVal"  => $retVal,
-                    "baseUrl" => $this->getRepositoryBaseUrl()
-                )
-            );
         }
+
+        return $this->renderView(
+            'verbs/ListRecords.xml.twig',
+            array(
+                "params" => $params,
+                "retVal"  => $retVal,
+                "baseUrl" => $this->getRepositoryBaseUrl()
+            )
+        );
     }
 
     /**
