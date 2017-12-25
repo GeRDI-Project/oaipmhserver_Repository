@@ -7,13 +7,15 @@
  */
 namespace AppBundle\Utils;
 
-use Symfony\Component\Debug\Exception\HandledErrorException;
 use AppBundle\Entity\Item;
-use AppBundle\Exception\OAIPMHException;
 use AppBundle\Exception\OAIPMHBadArgumentException;
 use AppBundle\Exception\OAIPMHBadVerbException;
-use \DateTime;
+use AppBundle\Exception\OAIPMHException;
+use AppBundle\Exception\OAIPMHNoSetHierarchyException;
+use AppBundle\Exception\OAIPMHBadResumptionTokenException;
+use Symfony\Component\Debug\Exception\HandledErrorException;
 use \Exception;
+use \DateTime;
 
 /**
  * OAIPMHUtils
@@ -224,6 +226,15 @@ class OAIPMHUtils
     {
         if (!isset($params["verb"])) {
             throw new OAIPMHBadVerbException();
+        }
+
+        if (isset($params["set"])) {
+            throw new OAIPMHNoSetHierarchyException();
+        }
+
+        //Check for a resumptionToken (not supported yet)
+        if (isset($params["resumptionToken"])) {
+            throw new OAIPMHBadResumptionTokenException();
         }
 
         foreach ($params as $key => $value) {

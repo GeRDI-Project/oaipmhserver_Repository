@@ -121,6 +121,9 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
 
     /**
      * resumptionToken is an exclusive parameter
+     *
+     * @todo As long as we do not support resumptionTokens this will return badArgument
+     *       needs to be adapted when this changes.
      */
     public function testListRecordsbadArgument3()
     {
@@ -129,16 +132,15 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
             'metadataPrefix' => 'oai_dc',
             'resumptionToken' => 'token123',
             'until' => '2017-12-31T23:59:59Z',
-            'some'  => 'value',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="badArgument"]',
+                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
                 $contents
             ),
-            "Answer does not include exactly one error tag with code 'badArgument'"
+            "Answer does not include exactly one error tag with code 'badResumptionToken'"
         );
     }
 

@@ -4,7 +4,7 @@
    <record> 
     <header>
       <identifier>{{ params.identifier }}</identifier> 
-      <datestamp>{{ item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
+      <datestamp>{{ record.item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
     </header>
     <metadata>
         {{ record.xml | raw }}
