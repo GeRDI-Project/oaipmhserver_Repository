@@ -297,7 +297,7 @@ class DefaultController extends Controller
            ->getRepository('AppBundle:Item')
            ->findAll();
 
-        $retVal = array();
+        $retRecords = array();
 
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $params)) {
@@ -307,14 +307,12 @@ class DefaultController extends Controller
             foreach ($item->getRecords() as $record) {
                 if ($record->getMetadataFormat()->getMetadataPrefix()
                     == $params["metadataPrefix"]) {
-                    $val["item"] = $item;
-                    $val["record"] = $record;
-                    $retVal[] = $val;
+                    $retRecords[] = $record;
                 }
             }
         }
 
-        if (count($retVal) == 0) {
+        if (count($retRecords) == 0) {
             throw new OAIPMHCannotDisseminateFormatException();
         }
 
@@ -322,7 +320,7 @@ class DefaultController extends Controller
             'verbs/ListRecords.xml.twig',
             array(
                 "params" => $params,
-                "retVal"  => $retVal,
+                "records"  => $retRecords,
                 "baseUrl" => $this->getRepositoryBaseUrl()
             )
         );
