@@ -9,6 +9,8 @@ namespace AppBundle\Utils;
 
 use Symfony\Component\Debug\Exception\HandledErrorException;
 use AppBundle\Entity\Item;
+use AppBundle\Exception\OAIPMHException;
+use AppBundle\Exception\OAIPMHBadArgumentException;
 use \DateTime;
 use \Exception;
 
@@ -213,28 +215,33 @@ class OAIPMHUtils
      * @param String $verb
      * @param String $reason Will be overwritten (call-by-address)
      *
+     * @throws AppBundle\Exception\OAIPMHException
+     *
      * @return bool
      */
-    public static function badArgumentsForVerb(array $params, String $verb, String &$reason)
+    public static function badArgumentsForVerb(array $params, String $verb)
     {
         foreach ($params as $key => $value) {
             if (!OAIPMHUtils::paramIsAllowedForVerb($key, $verb)) {
-                $reason = "$key is not allowed for verb $verb!";
-                return true;
+                $badArgument = new OAIPMHBadArgumentException();
+                $badArgument->appendReason(": $key is not allowed for verb $verb!");
+                throw $badArgument;
             }
         }
         foreach (OAIPMHUtils::getRequiredParamsForVerb($verb) as $req) {
             if (!array_key_exists($req, $params)) {
                 if (!$req == "metadataPrefix" or !array_key_exists("resumptionToken", $params)) {
-                    $reason = "Parameter '$req' has to be set when verb is '$verb'";
-                    return true;
+                    $badArgument = new OAIPMHBadArgumentException();
+                    $badArgument->setReason(": '$req' has to be set when verb is '$verb'");
+                    throw $badArgument;
                 }
             }
         }
         foreach (OAIPMHUtils::getExclusiveParamsForVerb($verb) as $excl) {
             if (array_key_exists($excl, $params) and count($params) > 2) {
-                $reason = "'$excl' is an exclusive parameter when called with '$verb'";
-                return true;
+                $badArgument = new OAIPMHBadArgumentException();
+                $badArgument->appendReason(": '$excl' is an exclusive parameter when called with '$verb'");
+                throw $badArgument;
             }
         }
         //check dates:
@@ -242,9 +249,11 @@ class OAIPMHUtils
         foreach ($dateFields as $dateField) {
             if (isset($params[$dateField])
                 and !OAIPMHUtils::validateOAIPMHDate($params[$dateField])) {
-                $reason =  "'" . $params[$dateField]."' is not a valid date!";
+                $badArgument = new OAIPMHBadArgumentException();
+                $reason =  ": '" . $params[$dateField]."' is not a valid date!";
                 $reason .=  " Allowed formats: 'YYYY-MM-DD' or 'YYYY-MM-DDThh:mm:ssZ' (ISO 8601)";
-                return true;
+                $badArgument->appendReason($reason);
+                throw $badArgument;
             }
         }
         return false;

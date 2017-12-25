@@ -13,11 +13,18 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\Item;
 use AppBundle\Entity\Record;
+use AppBundle\Exception\OAIPMHException;
+use AppBundle\Exception\OAIPMHBadResumptionTokenException;
+use AppBundle\Exception\OAIPMHIdDoesNotExistException;
+use AppBundle\Exception\OAIPMHNoMetadataFormatsException;
+use AppBundle\Exception\OAIPMHNoSetHierarchyException;
+use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
+use AppBundle\Exception\OAIPMHBadVerbException;
 use AppBundle\Utils\OAIPMHUtils;
 
 /**
  *
- * DefaultController for routes that should react like a OAI-PMH server 
+ * DefaultController for routes that should react like a OAI-PMH server
  *
  */
 class DefaultController extends Controller
@@ -32,26 +39,18 @@ class DefaultController extends Controller
         $response = new Response();
         $params = OAIPMHUtils::cleanOAIPMHkeys($request->query->all());
         // Check whether the right arguments are given
-        $reason = "";
-        if ($request->query->has("verb")) {
-            if (OAIPMHUtils::badArgumentsForVerb(
-                $request->query->all(),
-                $request->query->get("verb"),
-                $reason
-            )) {
-                $response->setContent(
-                    $this->renderView('errors/badArgument.xml.twig', array(
-                        "params" => $params,
-                        "reason" => $reason
-                    ))
+        try {
+            if ($request->query->has("verb")) {
+                OAIPMHUtils::badArgumentsForVerb(
+                    $request->query->all(),
+                    $request->query->get("verb")
                 );
-            } else {
                 switch ($request->query->get('verb')) {
                     case "Identify":
                         $response->setContent($this->oaipmhIdentify($params));
                         break;
                     case "ListSets":
-                        $response->setContent($this->oaipmhListSets($params));
+                        $response->setContent($this->oaipmhListSets());
                         break;
                     case "ListMetadataFormats":
                         $response->setContent($this->oaipmhListMetadataFormats($params));
@@ -66,19 +65,19 @@ class DefaultController extends Controller
                         $response->setContent($this->oaipmhListRecords($params));
                         break;
                     default:
-                        $response->setContent(
-                            $this->renderView('errors/badVerb.xml.twig', array(
-                                "params" => $params,
-                                "message" => "Verb ".$request->query->get("verb")." unknown"
-                            ))
-                        );
+                        $badVerb = new OAIPMHBadVerbException();
+                        $badVerb->setReason("Verb ".$request->query->get("verb")." unknown");
+                        throw $badVerb;
                 }
+            } else {
+                throw new OAIPMHBadVerbException();
             }
-        } else {
+        } catch (OAIPMHException $e) {
             $response->setContent(
-                $this->renderView('errors/badVerb.xml.twig', array(
+                $this->renderView('errors/oaipmhError.xml.twig', array(
                     "params" => $params,
-                    "message" => "No verb given",
+                    "reason"   => $e->getReason(),
+                    "code"     => $e->getErrorCode()
                 ))
             );
         }
@@ -111,13 +110,13 @@ class DefaultController extends Controller
      *
      * @param array $params Requested params (they are assumed to be complete and validated)
      *
+     * @throws AppBundle\Exception\OAIPMHNoSetHierarchyException
+     *
      * @return String The payload for the http answer in xml
      */
-    protected function oaipmhListSets(array $params)
+    protected function oaipmhListSets()
     {
-        return $this->renderView('errors/noSetHierarchy.xml.twig', array(
-                "params" => $params
-            ));
+        throw new OAIPMHNoSetHierarchyException();
     }
 
     /**
@@ -125,6 +124,8 @@ class DefaultController extends Controller
      * Processes a oaipmh - ListMetadataFormat request
      *
      * @param array $params Requested params (they are assumed to be complete and validated)
+     *
+     * @throws AppBundle\Exception\OAIPMHException
      *
      * @return String The payload for the http answer in xml
      */
@@ -149,9 +150,7 @@ class DefaultController extends Controller
                         $metadataFormats[] = $record->getMetadataFormat();
                     }
                     if (count($metadataFormats) == 0) {
-                        return $this->renderView('errors/noMetadataFormats.xml.twig', array(
-                            "params" => $params,
-                        ));
+                        throw new OAIPMHNoMetadataFormatsException($params['identifier']);
                     }
                     return $this->renderView('verbs/ListMetadataFormats.xml.twig', array(
                         "params" => $params,
@@ -159,9 +158,7 @@ class DefaultController extends Controller
                     ));
                 }
             }
-            return  $this->renderView('errors/idDoesNotExist.xml.twig', array(
-                "params" => $params,
-            ));
+            throw new OAIPMHIdDoesNotExistException($params['identifier']);
         /* Or identifier is not set, so we retrieve all MetadataFormats */
         } else {
             $metadataFormats = $this->getDoctrine()
@@ -180,6 +177,8 @@ class DefaultController extends Controller
      *
      * @param array $params Requested params (they are assumed to be complete and validated)
      *
+     * @throws AppBundle\Exception\OAIPMHException
+     *
      * @return String The payload for the http answer in xml
      */
     protected function oaipmhGetRecord(array $params)
@@ -195,7 +194,7 @@ class DefaultController extends Controller
                 ->getRepository('AppBundle:Item')
                 ->findOneById($matches[1]);
             if (is_null($item)) {
-                $template = 'errors/idDoesNotExist.xml.twig';
+                throw new OAIPMHIdDoesNotExistException($params['identifier']);
             } else {
                 //Check whether requested metadataPrefix can be disseminated
                 foreach ($item->getRecords() as $record) {
@@ -214,12 +213,15 @@ class DefaultController extends Controller
             }
             //Nothing found to disseminate!
             if (!isset($template)) {
-                $template = 'errors/cannotDisseminateFormat.xml.twig';
+                $cannotDisseminateFormat = new OAIPMHCannotDisseminateFormatException();
+                $cannotDisseminateFormat->appendReason($params["metadataPrefix"]
+                    . " for item with id "
+                    . $params['identifier']);
+                throw $cannotDisseminateFormat;
             }
         } else {
-            $template = 'errors/idDoesNotExist.xml.twig';
+            throw new OAIPMHIdDoesNotExistException($params['identifier']);
         }
-        
         return $this->renderView($template, array(
             "params" => $params,
         ));
@@ -235,21 +237,14 @@ class DefaultController extends Controller
      */
     public function oaipmhListIdentifiers(array $params)
     {
-        $error = false;
         //Check whether there is a set-selection (not supported yet)
-        if (! $error and isset($params["set"])) {
-            $template = 'errors/noSetHierarchy.xml.twig';
-            $error = true;
+        if (isset($params["set"])) {
+            throw new OAIPMHNoSetHierarchyException();
         }
 
         //Check for a resumptionToken (not supported yet)
-        if (! $error and isset($params["resumptionToken"])) {
-            $template = 'errors/badResumptionToken.xml.twig';
-            $error = true;
-        }
-
-        if ($error) {
-            return $this->renderView($template, array("params" => $params));
+        if (isset($params["resumptionToken"])) {
+            throw new OAIPMHBadResumptionTokenException();
         }
 
         $items = $this->getDoctrine()
@@ -270,12 +265,7 @@ class DefaultController extends Controller
             }
         }
         if (count($retItems) == 0) {
-            return $this->renderView(
-                'errors/cannotDisseminateFormat.xml.twig',
-                array(
-                    "params" => $params,
-                )
-            );
+            throw new OAIPMHCannotDisseminateFormatException();
         } else {
             return $this->renderView(
                 'verbs/ListIdentifiers.xml.twig',
@@ -294,28 +284,21 @@ class DefaultController extends Controller
      *
      * @param array $params Requested params (they are assumed to be complete and validated)
      *
+     * @throws AppBundle\Exception\OAIPMHException
+     *
      * @return String The payload for the http answer in xml
      */
     public function oaipmhListRecords(array $params)
     {
-        $error = false;
-
         //Check whether there is a set-selection (not supported yet)
-        if (! $error and isset($params["set"])) {
-            $template = 'errors/noSetHierarchy.xml.twig';
-            $error = true;
+        if (isset($params["set"])) {
+            throw new OAIPMHNoSetHierarchyException();
         }
 
         //Check for a resumptionToken (not supported yet)
-        if (! $error and isset($params["resumptionToken"])) {
-            $template = 'errors/badResumptionToken.xml.twig';
-            $error = true;
+        if (isset($params["resumptionToken"])) {
+            throw new OAIPMHBadResumptionTokenException();
         }
-
-        if ($error) {
-            return $this->renderView($template, array("params" => $params));
-        }
-        
 
         $items = $this->getDoctrine()
            ->getRepository('AppBundle:Item')
@@ -337,12 +320,7 @@ class DefaultController extends Controller
             }
         }
         if (count($retVal) == 0) {
-            return $this->renderView(
-                'errors/cannotDisseminateFormat.xml.twig',
-                array(
-                    "params" => $params,
-                )
-            );
+            throw new OAIPMHCannotDisseminateFormatException();
         } else {
             return $this->renderView(
                 'verbs/ListRecords.xml.twig',

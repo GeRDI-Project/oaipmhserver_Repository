@@ -1,6 +1,6 @@
 {% extends 'base.xml.twig' %}
 {% block payload %}
-   <error code="badArgument">
+   <error code="{{ code }}">
      {{ reason | raw }}
    </error>
 {% endblock %}
