@@ -38,6 +38,8 @@ class OAIPMHVerbFactory
      *
      * @var array $params Array from HTTP request
      *
+     * @throws OAIPMHException
+     *
      * @return AppBundle\Service\OAIPMHVerb
      */
     public function createVerb(array $params)
