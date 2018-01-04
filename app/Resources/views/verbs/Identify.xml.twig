@@ -1,0 +1,13 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+  <Identify>
+    <repositoryName>{{ repository.name }}</repositoryName>
+    <baseURL>{{ repository.baseUrl }}</baseURL>
+    <protocolVersion>{{ repository.protocolVersion }}</protocolVersion>
+    <adminEmail>{{ repository.adminEmail }}</adminEmail>
+    <earliestDatestamp>{{ repository.earliestTimestamp | date('Y-m-d\\Th:m:s\\Z', 'utc') }}</earliestDatestamp>
+    <deletedRecord>{{ repository.deletedRecord }}</deletedRecord>
+    <granularity>{{ repository.granularity }}</granularity>
+    <compression>{{ repository.compression }}</compression>
+ </Identify>
+{% endblock %}

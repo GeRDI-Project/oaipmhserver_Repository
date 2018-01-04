@@ -1,0 +1,12 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+  <ListMetadataFormats>
+{% for metadataFormat in metadataFormats %}
+   <metadataFormat>
+     <metadataPrefix>{{ metadataFormat.metadataPrefix }}</metadataPrefix>
+     <schema>{{ metadataFormat.metadataSchema }}</schema>
+     <metadataNamespace>{{ metadataFormat.metadataNamespace }}</metadataNamespace>
+   </metadataFormat>
+{% endfor %}
+ </ListMetadataFormats>
+{% endblock %}

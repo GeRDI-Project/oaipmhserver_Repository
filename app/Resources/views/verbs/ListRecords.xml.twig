@@ -1,0 +1,16 @@
+{% extends 'base.xml.twig' %}
+{% block payload %}
+  <ListRecords>
+{% for record in records %}
+    <record>
+        <header>
+          <identifier>oai:{{ baseUrl }}:{{ record.item.id }}</identifier> 
+          <datestamp>{{ record.item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
+        </header> 
+        <metadata>
+            {{ record.xml | raw }}
+        </metadata>
+    </record>
+{% endfor %}
+  </ListRecords>
+{% endblock %}

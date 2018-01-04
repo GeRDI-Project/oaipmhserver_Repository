@@ -21,6 +21,8 @@
     </documentation>
   </annotation>
 
+  <import schemaLocation="oai_dc.xsd"/>
+
   <element name="OAI-PMH" type="oai:OAI-PMHtype"/>
 
   <complexType name="OAI-PMHtype">
