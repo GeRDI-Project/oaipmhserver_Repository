@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This file is part of the GeRDI software suite
+# Author Stephan Hachinger <hachinger@lrz.de>
+# License: https://www.apache.org/licenses/LICENSE-2.0
+# No Warranty!
+
 echo "beginning to make OAI-PMH db from AlpEnDAC-iRODS"
 date
 
