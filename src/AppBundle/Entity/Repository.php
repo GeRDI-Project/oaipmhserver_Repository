@@ -50,7 +50,7 @@ class Repository
     /**
      * @var string
      *
-     * @ORM\Column(name="highest_id", type="string", length=255)
+     * @ORM\Column(name="highest_id", type="integer")
      */
     private $highestId;
 

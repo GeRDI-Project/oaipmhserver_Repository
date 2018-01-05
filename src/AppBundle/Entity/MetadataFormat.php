@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * MetadataFormat
  *
- * @ORM\Table(name="metadata_format")
+ * @ORM\Table(name="metadata_formats")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\MetadataFormatRepository")
  */
 class MetadataFormat

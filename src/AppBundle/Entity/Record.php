@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Record
  *
- * @ORM\Table(name="record")
+ * @ORM\Table(name="records")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\RecordRepository")
  */
 class Record
