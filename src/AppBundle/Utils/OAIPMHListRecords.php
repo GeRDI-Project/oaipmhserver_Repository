@@ -9,7 +9,7 @@ namespace AppBundle\Utils;
 
 use AppBundle\Utils\OAIPMHVerb;
 use AppBundle\Utils\OAIPMHUtils;
-use AppBundle\Excepton\OAIPMHCannotDisseminateFormatException;
+use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class OAIPMHListRecords extends OAIPMHParamVerb

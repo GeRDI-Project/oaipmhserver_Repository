@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# This file is part of the GeRDI software suite
+# Author Tobias Weber <weber@lrz.de> 
+# License: https://www.apache.org/licenses/LICENSE-2.0
+# Absolutely no warranty given!
+
 branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "master" ]
 then

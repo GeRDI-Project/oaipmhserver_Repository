@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * Item
  *
- * @ORM\Table(name="item")
+ * @ORM\Table(name="items")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\ItemRepository")
  */
 class Item
