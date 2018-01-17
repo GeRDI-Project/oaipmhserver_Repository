@@ -1,7 +1,8 @@
 FROM php:7.2.1-apache-stretch
 RUN apt-get update && apt-get install -y \
     sqlite3 \
-    libsqlite3-dev
+    libsqlite3-dev \
+    zip
 
 RUN docker-php-source extract
 RUN docker-php-ext-install -j$(nproc) pdo_sqlite
