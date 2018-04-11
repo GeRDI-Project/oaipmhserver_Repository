@@ -22,6 +22,13 @@ abstract class OAIPMHVerb
     protected $responseParams;
 
     /**
+     * @var Number of return items in a single response, further items with resumptionToken
+     * mar_debug
+     * Magic Number, find a better place (config?)
+     */
+    protected $threshold = 1;
+
+    /**
      * @var Doctrine\ORM\EntityManager
      */
     protected $em;
@@ -92,4 +99,12 @@ abstract class OAIPMHVerb
      * @return OAIPMHVerb
      */
     abstract public function retrieveResponseParams();
+
+    /**
+     * Returns how many items max in one response, further items with resumptionTokens
+     */
+     public function getThreshold()
+     {
+        return $this->threshold;
+     } 
 }

@@ -7,5 +7,8 @@
       <datestamp>{{ item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
     </header> 
 {% endfor %}
+{% if resumptionToken matches '/^manualToken.*/' %}
+ <resumptionToken expirationDate="2018-04-08T19:14:24Z" cursor="0"> {{ resumptionToken }} </resumptionToken>
+{% endif %}
   </ListIdentifiers>
 {% endblock %}

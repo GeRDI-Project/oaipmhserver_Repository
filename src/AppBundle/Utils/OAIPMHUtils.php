@@ -232,10 +232,11 @@ class OAIPMHUtils
             throw new OAIPMHNoSetHierarchyException();
         }
 
+        // mar_debug
         //Check for a resumptionToken (not supported yet)
-        if (isset($params["resumptionToken"])) {
-            throw new OAIPMHBadResumptionTokenException();
-        }
+        //if (isset($params["resumptionToken"])) {
+        //    throw new OAIPMHBadResumptionTokenException();
+        //}
 
         foreach ($params as $key => $value) {
             if (!OAIPMHUtils::paramIsAllowedForVerb($key, $params['verb'])) {
