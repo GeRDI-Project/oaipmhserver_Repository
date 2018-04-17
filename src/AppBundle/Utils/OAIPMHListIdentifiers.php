@@ -16,26 +16,10 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class OAIPMHListIdentifiers extends OAIPMHParamVerb
 {
-    // public function __construct(ObjectManager $em, array $reqParams)
-    // {
-    //     parent::__construct($em, $reqParams);
-    //     $this->setName("ListIdentifiers");
-    // }
-
-    /**
-     * @var array exclusive Parameters of OAI-PMH request
-     */
-    protected $exclParams;
-
-    // mar_debug 
-    // zusätzlicher paramter löschen, zum testen da, reqParams unbennnen
-    public function __construct(ObjectManager $em, array $reqParams, array $exclParams)
+    public function __construct(ObjectManager $em, array $reqParams)
     {
         parent::__construct($em, $reqParams);
-        $this->exclParams = $exclParams;
         $this->setName("ListIdentifiers");
-        print("Hello ListIdentifiers");
-        print(var_dump($reqParams));
     }
 
     /**
@@ -48,15 +32,12 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
            ->findAll();
 
         $retItems = array();
+        $offset = 0;
 
-        //check whether resumptionToken is avaiable
-        // if (array_key_exists("resumptionToken", $this->reqParams)) {
-        //     print("Habe resumptionToken bekommen, stelle Anfrage ein");
-        //     $metadataPrefix = explode('-', $this->reqParams['resumptionToken'])[2];
-        //     print(var_dump($offset));
-        //     //$retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
-        //     //$retItems = array_slice($retItems, 1, $preserve_keys = TRUE);
-        // }
+        // check whether resumptionToken is avaiable
+        if (array_key_exists("resumptionToken", $this->reqParams)) {
+            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'])));
+        }
 
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
@@ -65,36 +46,23 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
             //check whether metadataPrefix is available for item
             foreach ($item->getRecords() as $record) {
-                //print("Record".var_dump($record)."RecordEnde\n");
                 if ($record->getMetadataFormat()->getMetadataPrefix()
                     == $this->reqParams["metadataPrefix"]) {
                     $retItems[] = $item;
-                    //print("item: ".var_dump($item));
                 }
             }
         }
 
-        // mar_debubg 
-        // comment in
-        // if (count($retItems) == 0) {
-        //     throw new OAIPMHCannotDisseminateFormatException();
-        // }
-
-        $offset = 0;
-
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            print("Habe resumptionToken bekommen");
-            $offset = explode('-', $this->reqParams['resumptionToken'])[1];
-            print(var_dump($offset));
-            //$retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
-            //$retItems = array_slice($retItems, 1, $preserve_keys = TRUE);
+            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken']);
+            $retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
         }
 
-        if (count ($retItems) >= $this->getThreshold()){
+        if (count ($retItems) > $this->getThreshold()){
             // add resumption Token
-            print("Zu viele responsedd items\n");
             $retItems = array_slice($retItems, 0, $this->getThreshold(), $preserve_keys = TRUE);
-            $this->setResponseParam("resumptionToken", "manualToken-1");
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset);
+            $this->setResponseParam("resumptionToken", $resumptionToken);
         }
 
         $this->setResponseParam("items", $retItems);

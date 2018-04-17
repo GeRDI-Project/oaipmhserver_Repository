@@ -42,15 +42,9 @@ class DefaultController extends Controller
     {
         $response = new Response();
         $params = OAIPMHUtils::cleanOAIPMHkeys($request->query->all());
-        print("<!-- Request");
-        //print(var_dump($request));
-        print("Params");
-        print(var_dump($params));
-        print("-->");
         try {
             $oaipmhVerb = $this->oaipmhVerbFactory
                 ->createVerb($request->query->all());
-            //print("Set Content to: ".$oaipmhVerb->getResponseParams());
             $response->setContent(
                 $this->renderView(
                     "verbs/" . $oaipmhVerb->getName() . ".xml.twig",

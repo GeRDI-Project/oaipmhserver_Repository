@@ -280,4 +280,52 @@ class OAIPMHUtils
         }
         return false;
     }
+
+    /**
+     * Parse resumptionToken from URL, replace later with Database query
+     *
+     * @param String $resumptionToken
+     *
+     * @return array of paramters for query
+     */
+    public static function parse_resumptionToken(String $resumptionToken)
+    {
+        $params_token = explode('-', $resumptionToken);
+        $params;
+        for($i = 2; $i < count($params_token)-1 ; $i += 2){
+            $params[$params_token[$i]]=$params_token[$i+1];
+        }
+        return $params;
+    }
+
+    /**
+     * Get offset from resumptionToken from URL, replace later with Database query
+     *
+     * @param String $resumptionToken
+     *
+     * @return int offset
+     */
+    public static function getoffset_resumptionToken(String $resumptionToken)
+    {
+        $params_token = explode('-', $resumptionToken);
+        return $params_token[1];
+    }
+
+    /**
+     * Construct resumptionToken from parameters for query, replace later with Database insert
+     *
+     * @param Array reqParams, String $offset
+     *
+     * @return String $resumptionToken
+     */
+    public static function construct_resumptionToken(array $reqParams, String $offset)
+    {
+        $resumptionToken = "";
+        for($i=1; $i<count($reqParams); $i+=1){
+            if (array_keys($reqParams)[$i] == "resumptionToken") { continue; }
+            $resumptionToken = $resumptionToken."-".array_keys($reqParams)[$i];
+            $resumptionToken = $resumptionToken."-".array_values($reqParams)[$i];
+        }
+        return ("resToken-".(intval($offset)+1).$resumptionToken);
+    }
 }

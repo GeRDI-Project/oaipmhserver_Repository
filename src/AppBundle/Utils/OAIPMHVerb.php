@@ -26,7 +26,7 @@ abstract class OAIPMHVerb
      * mar_debug
      * Magic Number, find a better place (config?)
      */
-    protected $threshold = 1;
+    protected $threshold = 20;
 
     /**
      * @var Doctrine\ORM\EntityManager
