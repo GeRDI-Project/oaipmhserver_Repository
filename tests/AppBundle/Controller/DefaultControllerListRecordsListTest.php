@@ -121,9 +121,6 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
 
     /**
      * resumptionToken is an exclusive parameter
-     *
-     * @todo As long as we do not support resumptionTokens this will return badArgument
-     *       needs to be adapted when this changes.
      */
     public function testListRecordsbadArgument3()
     {

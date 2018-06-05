@@ -30,6 +30,12 @@ class OAIPMHListRecords extends OAIPMHParamVerb
            ->findAll();
 
         $retRecords = array();
+        $offset = 0;
+
+        // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
+        if (array_key_exists("resumptionToken", $this->reqParams)) {
+            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'], $this->em)));
+        }
 
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
@@ -44,8 +50,20 @@ class OAIPMHListRecords extends OAIPMHParamVerb
             }
         }
 
+        if (array_key_exists("resumptionToken", $this->reqParams)) {
+            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken'], $this->em);
+            $retRecords = array_slice($retRecords, intval($offset)*$this->getThreshold());
+        }
+
         if (count($retRecords) == 0) {
             throw new OAIPMHCannotDisseminateFormatException();
+        }
+
+        if (count ($retRecords) > $this->getThreshold()){
+            // add resumptionToken
+            $retRecords = array_slice($retRecords, 0, $this->getThreshold(), $preserve_keys = TRUE);
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $this->em);
+            $this->setResponseParam("resumptionToken", $resumptionToken);
         }
 
         $this->setResponseParam("records", $retRecords);

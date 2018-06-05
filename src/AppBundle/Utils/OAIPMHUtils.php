@@ -8,12 +8,16 @@
 namespace AppBundle\Utils;
 
 use AppBundle\Entity\Item;
+use AppBundle\Entity\ResumptionToken;
 use AppBundle\Exception\OAIPMHBadArgumentException;
 use AppBundle\Exception\OAIPMHBadVerbException;
 use AppBundle\Exception\OAIPMHException;
 use AppBundle\Exception\OAIPMHNoSetHierarchyException;
 use AppBundle\Exception\OAIPMHBadResumptionTokenException;
 use Symfony\Component\Debug\Exception\HandledErrorException;
+use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\ORM\EntityManager;
 use \Exception;
 use \DateTime;
 
@@ -232,12 +236,6 @@ class OAIPMHUtils
             throw new OAIPMHNoSetHierarchyException();
         }
 
-        // mar_debug
-        //Check for a resumptionToken (not supported yet)
-        //if (isset($params["resumptionToken"])) {
-        //    throw new OAIPMHBadResumptionTokenException();
-        //}
-
         foreach ($params as $key => $value) {
             if (!OAIPMHUtils::paramIsAllowedForVerb($key, $params['verb'])) {
                 $badArgument = new OAIPMHBadArgumentException();
@@ -282,50 +280,72 @@ class OAIPMHUtils
     }
 
     /**
-     * Parse resumptionToken from URL, replace later with Database query
+     * Translate resumptionToken in query parameters
      *
-     * @param String $resumptionToken
+     * @param String $resumptionToken, ObjectManager $em
      *
      * @return array of paramters for query
      */
-    public static function parse_resumptionToken(String $resumptionToken)
+    public static function parse_resumptionToken(String $resumptionToken, ObjectManager $em)
     {
-        $params_token = explode('-', $resumptionToken);
+        $parsed_token = $em->getRepository('AppBundle:ResumptionToken')->findOneBy(array('token' => $resumptionToken));
+        if(is_null($parsed_token)) {
+            throw new OAIPMHBadResumptionTokenException(); 
+        }
+        $params_splitted = explode('-', $parsed_token->getParams());
         $params;
-        for($i = 2; $i < count($params_token)-1 ; $i += 2){
-            $params[$params_token[$i]]=$params_token[$i+1];
+        for($i = 2; $i < count($params_splitted)-1 ; $i += 2){
+            $params[$params_splitted[$i]]=$params_splitted[$i+1];
         }
         return $params;
     }
 
     /**
-     * Get offset from resumptionToken from URL, replace later with Database query
+     * Get offset from resumptionToken
      *
      * @param String $resumptionToken
      *
      * @return int offset
      */
-    public static function getoffset_resumptionToken(String $resumptionToken)
+    public static function getoffset_resumptionToken(String $resumptionToken, ObjectManager $em)
     {
-        $params_token = explode('-', $resumptionToken);
-        return $params_token[1];
+        $parsed_token = $em->getRepository('AppBundle:ResumptionToken')->findOneBy(array('token' => $resumptionToken));
+        if(is_null($parsed_token)) {
+            throw new OAIPMHBadResumptionTokenException(); 
+        }
+        $params_splitted = explode('-', $parsed_token->getParams());
+        return $params_splitted[1];
     }
 
     /**
      * Construct resumptionToken from parameters for query, replace later with Database insert
      *
-     * @param Array reqParams, String $offset
+     * @param Array reqParams, String $offset, ObjectManager $em
      *
      * @return String $resumptionToken
      */
-    public static function construct_resumptionToken(array $reqParams, String $offset)
+    public static function construct_resumptionToken(array $reqParams, String $offset, ObjectManager $em)
     {
-        $resumptionToken = "";
+        $uuid = bin2hex(random_bytes(24));
+        $query = "";
         for($i=1; $i<count($reqParams); $i+=1){
             if (array_keys($reqParams)[$i] == "resumptionToken") { continue; }
-            $resumptionToken = $resumptionToken."-".array_keys($reqParams)[$i];
-            $resumptionToken = $resumptionToken."-".array_values($reqParams)[$i];
+            $query = $query."-".array_keys($reqParams)[$i];
+            $query = $query."-".array_values($reqParams)[$i];
         }
-        return ("resToken-".(intval($offset)+1).$resumptionToken);
+        $query="offset-".(intval($offset)+1).$query;
+
+        $resTok = new ResumptionToken();
+        $resTok->setToken($uuid);
+        $resTok->setParams($query);
+
+        try{
+            $em->persist($resTok);
+            $em->flush($resTok);
+        } catch (Exception $e) {
+            throw new OAIPMHBadResumptionTokenException();
+        }
+
+        return $uuid;
     }
 }

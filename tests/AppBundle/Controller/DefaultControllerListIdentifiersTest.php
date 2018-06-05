@@ -121,9 +121,6 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
 
     /**
      * resumptionToken is an exclusive parameter
-     *
-     * @todo As long as we do not support resumptionTokens this will return badArgument
-     *       needs to be adapted when this changes.
      */
     public function testListIdentifiersbadArgument3()
     {
@@ -166,9 +163,7 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
     }
 
     /**
-     * We do not support resumptionTokens
-     * @todo If we do that, this test case must be rewritten
-     * and a testcase for a successful resumption token added.
+     * Test with an invalid resumptionToken
      */
     public function testListIdentifiersBadResumptionToken()
     {
@@ -183,12 +178,12 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
                 '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
                 $contents
             ),
-            "Answer does not include exactly one error tag with code 'badResumptionToken'"
+            "Invalid resumptionToken"
         );
     }
 
     /**
-     * metadataPrefis is not supported
+     * metadataPrefix is not supported
      */
     public function testListIdentifiersCannotDisseminateFormat()
     {
@@ -241,6 +236,28 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
         $queryData = array(
             'verb'  => "ListIdentifiers",
             'metadataPrefix' => 'oai_dc',
+            'set' => 'setTag',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
+                $contents
+            ),
+            "Answer does not include exactly one error tag with code 'noSetHierarchy'"
+        );
+    }
+
+    /**
+     *  Test size of resumptionToken
+     *  length of array generated from resumptionToken must be even
+     */
+    public function testListIdentifiersNoSetHierarchy()
+    {
+        $queryData = array(
+            'verb'  => "ListIdentifiers",
+            'resumptionToken' => 'oai_dc',
             'set' => 'setTag',
         );
         $contents = $this->getGetAndPost("/", $queryData);

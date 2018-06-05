@@ -5,14 +5,18 @@
  * @author  Tobias Weber <weber@lrz.de>
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
+
 namespace AppBundle\Utils;
 
 use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
-//mar_debug
-use AppBundle\Exception\OAIPMHGoodResTokException;
 use AppBundle\Utils\OAIPMHUtils;
 use AppBundle\Utils\OAIPMHVerb;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\Common\Persistence\ObjectRepository;
+use AppBundle\Entity\ResumptionToken;
+// use Ramsey\Uuid\Uuid;
+// use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
+
 
 class OAIPMHListIdentifiers extends OAIPMHParamVerb
 {
@@ -34,9 +38,9 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $retItems = array();
         $offset = 0;
 
-        // check whether resumptionToken is avaiable
+        // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'])));
+            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'], $this->em)));
         }
 
         foreach ($items as $item) {
@@ -54,14 +58,14 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         }
 
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken']);
+            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken'], $this->em);
             $retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
         }
 
         if (count ($retItems) > $this->getThreshold()){
-            // add resumption Token
+            // add resumptionToken
             $retItems = array_slice($retItems, 0, $this->getThreshold(), $preserve_keys = TRUE);
-            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset);
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $this->em);
             $this->setResponseParam("resumptionToken", $resumptionToken);
         }
 
