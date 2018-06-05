@@ -23,9 +23,9 @@ abstract class OAIPMHVerb
 
     /**
      * @var Number of return items in a single response, further items with resumptionToken
-     * Magic Number, find a better place (config?)
+     * Magic Number, @todo find a better place (config?)
      */
-    protected $threshold = 1;
+    protected $threshold = 100;
 
     /**
      * @var Doctrine\ORM\EntityManager
