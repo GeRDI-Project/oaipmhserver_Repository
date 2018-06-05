@@ -8,8 +8,5 @@
      <metadataNamespace>{{ metadataFormat.metadataNamespace }}</metadataNamespace>
    </metadataFormat>
 {% endfor %}
-{% if resumptionToken is defined and resumptionToken is not empty %}
- <resumptionToken expirationDate="2018-04-08T19:14:24Z" cursor="0">{{resumptionToken}}</resumptionToken>
-{% endif %}
  </ListMetadataFormats>
 {% endblock %}
