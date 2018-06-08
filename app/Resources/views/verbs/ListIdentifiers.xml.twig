@@ -7,8 +7,8 @@
       <datestamp>{{ item.timestamp | date('Y-m-d\\Th:m:s\\Z', 'utc')  }}</datestamp>
     </header> 
 {% endfor %}
-{% if resumptionToken is defined and resumptionToken is not empty %}
- <resumptionToken>{{resumptionToken}}</resumptionToken>
+{% if resumptionToken is defined %}
+ <resumptionToken completeListSize="{{completeListSize}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
 {% endif %}
   </ListIdentifiers>
 {% endblock %}

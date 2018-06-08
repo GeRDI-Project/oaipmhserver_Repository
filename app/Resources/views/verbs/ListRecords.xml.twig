@@ -12,8 +12,8 @@
         </metadata>
     </record>
 {% endfor %}
-{% if resumptionToken is defined and resumptionToken is not empty %}
- <resumptionToken>{{resumptionToken}}</resumptionToken>
+{% if resumptionToken is defined %}
+ <resumptionToken completeListSize="{{completeListSize}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
 {% endif %}
   </ListRecords>
 {% endblock %}

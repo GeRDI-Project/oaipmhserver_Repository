@@ -37,10 +37,12 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
         $retItems = array();
         $offset = 0;
+        $completeListSize=0;
 
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'], $this->em)));
+            $this->setResponseParam("resumptionToken", "");
         }
 
         foreach ($items as $item) {
@@ -56,6 +58,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                 }
             }
         }
+        $completeListSize=count($retItems);
 
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken'], $this->em);
@@ -67,6 +70,12 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             $retItems = array_slice($retItems, 0, $this->getThreshold(), $preserve_keys = TRUE);
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $this->em);
             $this->setResponseParam("resumptionToken", $resumptionToken);
+        }
+
+        // Attributes for resumptionToken
+        if (array_key_exists("resumptionToken", $this->responseParams)){
+            $this->setResponseParam("completeListSize", $completeListSize);
+            $this->setResponseParam("cursor", intval($offset)*$this->getThreshold());
         }
 
         $this->setResponseParam("items", $retItems);
