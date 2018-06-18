@@ -15,4 +15,11 @@ namespace AppBundle\Repository;
  */
 class ItemRepository extends \Doctrine\ORM\EntityRepository
 {
+	public function getNitems(String $offset, String $limit)
+    {
+    	$query='SELECT u FROM AppBundle:Item u  LIMIT '.$limit.' OFFSET '.$offset;
+    	print($query);
+        return $this->_em->createQuery($query)
+                         ->getResult();
+    }
 }

@@ -35,10 +35,11 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $retItems = array();
         $offset = 0;
         $completeListSize=0;
+        $moreitems =false;
 
-        $qb->add('select', '*')
-            ->setFirstResult( $offset )
-            ->setMaxResults( $limit );
+        //$qb->add('select', '*')
+        //    ->setFirstResult( $offset )
+        //    ->setMaxResults( $limit );
 
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
@@ -49,10 +50,17 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->findAll();
+           ->getNitems("0","5");
+
+        print("Typ ist ");
+        print(gettype($items));
 
 
         foreach ($items as $item) {
+            if (count($retItems)>$this->getThreshold()){
+                $moreitems=true;
+                break;
+            }
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
                 continue;
             }
