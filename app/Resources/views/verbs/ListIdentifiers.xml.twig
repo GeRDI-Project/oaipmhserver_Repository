@@ -8,7 +8,7 @@
     </header> 
 {% endfor %}
 {% if resumptionToken is defined %}
- <resumptionToken completeListSize="{{completeListSize}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
+ <resumptionToken expirationDate="{{expirationDate}}" completeListSize="{{completeListSize}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
 {% endif %}
   </ListIdentifiers>
 {% endblock %}

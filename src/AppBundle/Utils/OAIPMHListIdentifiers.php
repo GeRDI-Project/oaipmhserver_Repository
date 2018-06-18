@@ -14,6 +14,7 @@ use AppBundle\Utils\OAIPMHVerb;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
 use AppBundle\Entity\ResumptionToken;
+use \DateTime;
 // use Ramsey\Uuid\Uuid;
 // use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 
@@ -31,19 +32,21 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $items = $this->em
-           ->getRepository('AppBundle:Item')
-           ->findAll();
-
         $retItems = array();
         $offset = 0;
         $completeListSize=0;
 
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'], $this->em)));
+            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'])));
             $this->setResponseParam("resumptionToken", "");
         }
+
+
+        $items = $this->em
+           ->getRepository('AppBundle:Item')
+           ->findAll();
+
 
         foreach ($items as $item) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
@@ -58,17 +61,23 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                 }
             }
         }
+
+        $timestamp = new DateTime();
+        $timestamp->modify('+1 day');
+        print("Timestamp test");
+        print($timestamp->format('Y-m-d H:i:sP'));
+
         $completeListSize=count($retItems);
 
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken'], $this->em);
+            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken']);
             $retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
         }
 
         if (count ($retItems) > $this->getThreshold()){
             // add resumptionToken
             $retItems = array_slice($retItems, 0, $this->getThreshold(), $preserve_keys = TRUE);
-            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $this->em);
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset);
             $this->setResponseParam("resumptionToken", $resumptionToken);
         }
 

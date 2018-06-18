@@ -29,6 +29,16 @@ use \DateTime;
  */
 class OAIPMHUtils
 {
+    public static function base64url_encode($data) { 
+        //print("Hallo Aufruf");
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '='); 
+        //print("Blasentee");
+    }
+    
+    public static function base64url_decode($data) {
+        return base64_decode(strtr($data, '-_', '+/'));
+    }
+
     /**
      * Checks whether items timestamp matches the until/from selection
      *
@@ -279,26 +289,27 @@ class OAIPMHUtils
         return false;
     }
 
+
     /**
      * Translate resumptionToken in query parameters
      *
-     * @param String $resumptionToken, ObjectManager $em
+     * @param String $resumptionToken
      *
      * @return array of paramters for query
      */
-    public static function parse_resumptionToken(String $resumptionToken, ObjectManager $em)
+    public static function parse_resumptionToken(String $resumptionToken)
     {
-        $parsed_token = $em->getRepository('AppBundle:ResumptionToken')->findOneBy(array('token' => $resumptionToken));
-        if(is_null($parsed_token)) {
-            throw new OAIPMHBadResumptionTokenException(); 
+        //print("Token : ".$resumptionToken);
+        $token=OAIPMHUtils::base64url_decode($resumptionToken);
+        //print("decoded : ".$token);
+        $params_token = explode('-', $token);
+        for($i = 2; $i < count($params_token)-1 ; $i += 2){
+-            $params[$params_token[$i]]=$params_token[$i+1];
         }
-        $params_splitted = explode('-', $parsed_token->getParams());
-        $params;
-        for($i = 2; $i < count($params_splitted)-1 ; $i += 2){
-            $params[$params_splitted[$i]]=$params_splitted[$i+1];
-        }
+        //var_dump($params);
         return $params;
     }
+
 
     /**
      * Get offset from resumptionToken
@@ -307,26 +318,22 @@ class OAIPMHUtils
      *
      * @return int offset
      */
-    public static function getoffset_resumptionToken(String $resumptionToken, ObjectManager $em)
+    public static function getoffset_resumptionToken(String $resumptionToken)
     {
-        $parsed_token = $em->getRepository('AppBundle:ResumptionToken')->findOneBy(array('token' => $resumptionToken));
-        if(is_null($parsed_token)) {
-            throw new OAIPMHBadResumptionTokenException(); 
-        }
-        $params_splitted = explode('-', $parsed_token->getParams());
-        return $params_splitted[1];
+        $token=OAIPMHUtils::base64url_decode($resumptionToken);
+        $params_token = explode('-', $token);
+        return $params_token[1];
     }
 
     /**
      * Construct resumptionToken from parameters for query, replace later with Database insert
      *
-     * @param Array reqParams, String $offset, ObjectManager $em
+     * @param Array reqParams, String $offset
      *
      * @return String $resumptionToken
      */
-    public static function construct_resumptionToken(array $reqParams, String $offset, ObjectManager $em)
+    public static function construct_resumptionToken(array $reqParams, String $offset)
     {
-        $uuid = bin2hex(random_bytes(24));
         $query = "";
         for($i=1; $i<count($reqParams); $i+=1){
             if (array_keys($reqParams)[$i] == "resumptionToken") { continue; }
@@ -334,18 +341,11 @@ class OAIPMHUtils
             $query = $query."-".array_values($reqParams)[$i];
         }
         $query="offset-".(intval($offset)+1).$query;
+        //print("Query ist : ".$query);
 
-        $resTok = new ResumptionToken();
-        $resTok->setToken($uuid);
-        $resTok->setParams($query);
+        $token=OAIPMHUtils::base64url_encode($query);
+        //print("Token ist : ".$token);
 
-        try{
-            $em->persist($resTok);
-            $em->flush($resTok);
-        } catch (Exception $e) {
-            throw new OAIPMHBadResumptionTokenException();
-        }
-
-        return $uuid;
+        return $token;
     }
 }
