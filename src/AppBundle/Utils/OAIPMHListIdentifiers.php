@@ -36,6 +36,10 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $offset = 0;
         $completeListSize=0;
 
+        $qb->add('select', '*')
+            ->setFirstResult( $offset )
+            ->setMaxResults( $limit );
+
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'])));
@@ -63,7 +67,9 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         }
 
         $timestamp = new DateTime();
-        $timestamp->modify('+1 day');
+        print("Timestamp test");
+        print($timestamp->format('Y-m-d H:i:sP'));
+        $timestamp->modify('+1 hour');
         print("Timestamp test");
         print($timestamp->format('Y-m-d H:i:sP'));
 
@@ -85,6 +91,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         if (array_key_exists("resumptionToken", $this->responseParams)){
             $this->setResponseParam("completeListSize", $completeListSize);
             $this->setResponseParam("cursor", intval($offset)*$this->getThreshold());
+            $this->setResponseParam("expirationDate", $timestamp->format('Y-m-d H:i:sP'));
         }
 
         $this->setResponseParam("items", $retItems);
