@@ -55,9 +55,27 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         print("Typ ist ");
         print(gettype($items));
 
-
-        foreach ($items as $item) {
+        for($i=0;$i<count($items);$i++){
             if (count($retItems)>$this->getThreshold()){
+                print("Breaking");
+                $moreitems=true;
+                break;
+            }
+            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
+                continue;
+            }
+            //check whether metadataPrefix is available for item
+            foreach ($items[$i]->getRecords() as $record) {
+                if ($record->getMetadataFormat()->getMetadataPrefix()
+                    == $this->reqParams["metadataPrefix"]) {
+                    $retItems[] = $items[$i];
+                }
+            }
+
+        }
+        /*foreach ($items as $item) {
+            if (count($retItems)>$this->getThreshold()){
+                print("Breaking");
                 $moreitems=true;
                 break;
             }
@@ -72,7 +90,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                     $retItems[] = $item;
                 }
             }
-        }
+        }*/
 
         $timestamp = new DateTime();
         print("Timestamp test");
