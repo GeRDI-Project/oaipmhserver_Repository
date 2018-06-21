@@ -35,6 +35,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $retItems = array();
         $offset = 0;
         $completeListSize=0;
+        $cursor=0;
         $moreitems =false;
 
         //$qb->add('select', '*')
@@ -52,13 +53,13 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
            ->getRepository('AppBundle:Item')
            ->getNitems("0","5");
 
-        print("Typ ist ");
-        print(gettype($items));
+        //print("Typ ist ");
+        //print(gettype($items));
 
         for($i=0;$i<count($items);$i++){
-            if (count($retItems)>$this->getThreshold()){
-                print("Breaking");
+            if (count($retItems)==$this->getThreshold()){
                 $moreitems=true;
+                $offset=$i;
                 break;
             }
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
@@ -93,25 +94,29 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         }*/
 
         $timestamp = new DateTime();
-        print("Timestamp test");
-        print($timestamp->format('Y-m-d H:i:sP'));
         $timestamp->modify('+1 hour');
-        print("Timestamp test");
-        print($timestamp->format('Y-m-d H:i:sP'));
+        $completeListSize=count($items);
 
-        $completeListSize=count($retItems);
-
+        /*
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken']);
             $retItems = array_slice($retItems, intval($offset)*$this->getThreshold());
         }
+        */
 
+        if($moreitems){
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
+            $this->setResponseParam("resumptionToken", $resumptionToken);
+        }
+
+        /*
         if (count ($retItems) > $this->getThreshold()){
             // add resumptionToken
             $retItems = array_slice($retItems, 0, $this->getThreshold(), $preserve_keys = TRUE);
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset);
             $this->setResponseParam("resumptionToken", $resumptionToken);
         }
+        */
 
         // Attributes for resumptionToken
         if (array_key_exists("resumptionToken", $this->responseParams)){

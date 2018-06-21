@@ -18,7 +18,6 @@ class ItemRepository extends \Doctrine\ORM\EntityRepository
 	public function getNitems(String $offset, String $limit)
     {
     	$querytext='SELECT u FROM AppBundle:Item u';
-    	print($querytext);
     	$query=$this->_em->createQuery($querytext);
     	$query->setFirstResult($offset);
 		$query->setMaxResults($limit);

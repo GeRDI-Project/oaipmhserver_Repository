@@ -332,7 +332,7 @@ class OAIPMHUtils
      *
      * @return String $resumptionToken
      */
-    public static function construct_resumptionToken(array $reqParams, String $offset)
+    public static function construct_resumptionToken(array $reqParams, String $offset, int $cursor)
     {
         $query = "";
         for($i=1; $i<count($reqParams); $i+=1){
