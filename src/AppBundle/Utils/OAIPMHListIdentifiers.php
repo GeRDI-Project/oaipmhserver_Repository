@@ -45,6 +45,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             $this->reqParams = array_merge($this->reqParams,$tokendata[0]);
             $offset=$tokendata[1];
             //print("Offset ist ".$offset);
+            $cursor+=$this->getThreshold();
             $this->setResponseParam("resumptionToken", "");
         }
 
@@ -93,6 +94,9 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         if($moreitems){
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
             $this->setResponseParam("resumptionToken", $resumptionToken);
+        }
+        else{
+            $completeListSize=$cursor+count($retItems);
         }
 
         /*

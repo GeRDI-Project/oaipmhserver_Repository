@@ -303,12 +303,12 @@ class OAIPMHUtils
         $token=OAIPMHUtils::base64url_decode($resumptionToken);
         //print("decoded : ".$token);
         $params_token = explode('-', $token);
-        for($i = 2; $i < count($params_token)-1 ; $i += 2){
+        for($i = 4; $i < count($params_token)-1 ; $i += 2){
 -            $params[$params_token[$i]]=$params_token[$i+1];
         }
         //var_dump($params);
         //print("Offset hier ist ".$params_token[1]);
-        return array($params, $params_token[1]);
+        return array($params, $params_token[1], $params_token[3]);
     }
 
 
@@ -341,7 +341,7 @@ class OAIPMHUtils
             $query = $query."-".array_keys($reqParams)[$i];
             $query = $query."-".array_values($reqParams)[$i];
         }
-        $query="offset-".$offset.$query;
+        $query="offset-".$offset."-cursor-".$cursor.$query;
         //print("Query ist : ".$query);
 
         $token=OAIPMHUtils::base64url_encode($query);
