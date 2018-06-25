@@ -38,30 +38,24 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $cursor=0;
         $moreitems =false;
 
-        //$qb->add('select', '*')
-        //    ->setFirstResult( $offset )
-        //    ->setMaxResults( $limit );
-
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'])));
+            $tokendata=OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken']);
+            //print("Tokendata1 ist ".$tokendata[1]);
+            $this->reqParams = array_merge($this->reqParams,$tokendata[0]);
+            $offset=$tokendata[1];
+            //print("Offset ist ".$offset);
             $this->setResponseParam("resumptionToken", "");
         }
 
-
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getNitems("0","5");
+           ->getNitems($offset,"5");
+        $completeListSize=count($items)+$offset;
 
-        //print("Typ ist ");
-        //print(gettype($items));
 
         for($i=0;$i<count($items);$i++){
-            if (count($retItems)==$this->getThreshold()){
-                $moreitems=true;
-                $offset=$i;
-                break;
-            }
+            //print("Neuer Lauf ".$i);
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
             }
@@ -69,34 +63,26 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             foreach ($items[$i]->getRecords() as $record) {
                 if ($record->getMetadataFormat()->getMetadataPrefix()
                     == $this->reqParams["metadataPrefix"]) {
+                    
                     $retItems[] = $items[$i];
+                    //print("Added");
                 }
             }
-
-        }
-        /*foreach ($items as $item) {
             if (count($retItems)>$this->getThreshold()){
-                print("Breaking");
+                array_pop($retItems);
                 $moreitems=true;
+                $offset+=$i;
+                //print("Setze offset auf ".$offset);
+                //print("Breche raus");
                 break;
             }
-            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
-                continue;
-            }
 
-            //check whether metadataPrefix is available for item
-            foreach ($item->getRecords() as $record) {
-                if ($record->getMetadataFormat()->getMetadataPrefix()
-                    == $this->reqParams["metadataPrefix"]) {
-                    $retItems[] = $item;
-                }
-            }
-        }*/
+            
+        }
 
         $timestamp = new DateTime();
         $timestamp->modify('+1 hour');
-        $completeListSize=count($items);
-
+        
         /*
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken']);
