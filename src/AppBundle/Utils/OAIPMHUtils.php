@@ -311,21 +311,6 @@ class OAIPMHUtils
         return array($params, $params_token[1], $params_token[3]);
     }
 
-
-    /**
-     * Get offset from resumptionToken
-     *
-     * @param String $resumptionToken
-     *
-     * @return int offset
-     */
-    public static function getoffset_resumptionToken(String $resumptionToken)
-    {
-        $token=OAIPMHUtils::base64url_decode($resumptionToken);
-        $params_token = explode('-', $token);
-        return $params_token[1];
-    }
-
     /**
      * Construct resumptionToken from parameters for query, replace later with Database insert
      *
