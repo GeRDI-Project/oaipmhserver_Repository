@@ -47,7 +47,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->->getNitems($offset,"5");
+           ->getNitems($offset,"5");
 
         
 
@@ -75,6 +75,8 @@ class OAIPMHListRecords extends OAIPMHParamVerb
 
 
         if($moreitems){
+            //print(gettype($offset));
+            //print(gettype($cursor));
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
             $this->setResponseParam("resumptionToken", $resumptionToken);
         }
