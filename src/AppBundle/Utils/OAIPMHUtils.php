@@ -299,7 +299,6 @@ class OAIPMHUtils
      */
     public static function parse_resumptionToken(String $resumptionToken)
     {
-        //print("Token : ".$resumptionToken);
         $token=OAIPMHUtils::base64url_decode($resumptionToken);
         $params_token = explode('-', $token);
         if(sizeof($params_token)%2!=0){
@@ -327,10 +326,7 @@ class OAIPMHUtils
             $query = $query."-".array_values($reqParams)[$i];
         }
         $query="offset-".$offset."-cursor-".$cursor.$query;
-        //print("Query ist : ".$query);
-
         $token=OAIPMHUtils::base64url_encode($query);
-        //print("Token ist : ".$token);
 
         return $token;
     }

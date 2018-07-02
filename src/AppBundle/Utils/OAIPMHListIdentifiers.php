@@ -41,15 +41,12 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
             $offset=$tokendata["offset"];
             $cursor=$tokendata["cursor"]+$this->getThreshold();
-            if (in_array(null, $reqParams, true) || in_array('', $reqParams, true)) {
-                throw new OAIPMHBadResumptionTokenException();
-            }
             $this->setResponseParam("resumptionToken", "");
         }
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getNitems($offset,"5");
+           ->getNitems($offset);
         $completeListSize=count($items)+$offset;
 
 
@@ -72,8 +69,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             }
         }
 
-        $timestamp = new DateTime();
-        $timestamp->modify('+1 hour');
+        $timestamp = new DateTime()->modify('+1 hour');
 
         if($moreitems){
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
