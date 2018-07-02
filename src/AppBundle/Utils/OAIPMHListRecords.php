@@ -27,7 +27,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $retRecords = array();
+        //$retRecords = array();
         $offset = 0;
         $completeListSize=0;
         $cursor=0;
@@ -44,9 +44,8 @@ class OAIPMHListRecords extends OAIPMHParamVerb
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getNitems($offset);
-
-        
+           ->getItemsOffset($offset);
+        $completeListSize=count($items)+$offset;
 
         for($i=0;$i<count($items);$i++){
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
@@ -67,8 +66,8 @@ class OAIPMHListRecords extends OAIPMHParamVerb
             }
         }
 
-        $timestamp = new DateTime()->modify('+1 hour');
-
+        $timestamp = new DateTime();
+        $timestamp->modify('+1 hour');
 
         if($moreitems){
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);

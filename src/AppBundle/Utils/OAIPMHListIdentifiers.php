@@ -13,7 +13,6 @@ use AppBundle\Exception\OAIPMHBadResumptionTokenException;
 use AppBundle\Utils\OAIPMHUtils;
 use AppBundle\Utils\OAIPMHVerb;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Persistence\ObjectRepository;
 use \DateTime;
 
 class OAIPMHListIdentifiers extends OAIPMHParamVerb
@@ -29,7 +28,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $retItems = array();
+        //$retItems = array();
         $offset = 0;
         $completeListSize=0;
         $cursor=0;
@@ -46,7 +45,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getNitems($offset);
+           ->getItemsOffset($offset);
         $completeListSize=count($items)+$offset;
 
 
@@ -69,7 +68,8 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             }
         }
 
-        $timestamp = new DateTime()->modify('+1 hour');
+        $timestamp = new DateTime();
+        $timestamp->modify('+1 hour');
 
         if($moreitems){
             $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
