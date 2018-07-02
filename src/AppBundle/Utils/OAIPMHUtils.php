@@ -297,7 +297,7 @@ class OAIPMHUtils
      *
      * @return array of paramters for query: [params, offset, cursor]
      */
-    public static function parse_resumptionToken(String $resumptionToken)
+    public static function parseResumptionToken(String $resumptionToken)
     {
         $token=OAIPMHUtils::base64url_decode($resumptionToken);
         $params_token = explode('-', $token);
@@ -317,7 +317,7 @@ class OAIPMHUtils
      *
      * @return String $resumptionToken
      */
-    public static function construct_resumptionToken(array $reqParams, String $offset, int $cursor)
+    public static function constructResumptionToken(array $reqParams, String $offset, int $cursor)
     {
         $query = "";
         for($i=1; $i<count($reqParams); $i+=1){

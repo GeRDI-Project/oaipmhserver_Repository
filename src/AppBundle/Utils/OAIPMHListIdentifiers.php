@@ -29,17 +29,17 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
     public function retrieveResponseParams()
     {
         //$retItems = array();
-        $offset = 0;
-        $completeListSize=0;
-        $cursor=0;
-        $moreitems =false;
+        $offset           = 0;
+        $completeListSize = 0;
+        $cursor           = 0;
+        $moreitems        = false;
 
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $tokendata=OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken']);
+            $tokendata=OAIPMHUtils::parseResumptionToken($this->reqParams['resumptionToken']);
             $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
-            $offset=$tokendata["offset"];
-            $cursor=$tokendata["cursor"]+$this->getThreshold();
+            $offset          = $tokendata["offset"];
+            $cursor          = $tokendata["cursor"]+$this->getThreshold();
             $this->setResponseParam("resumptionToken", "");
         }
 
@@ -72,7 +72,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $timestamp->modify('+1 hour');
 
         if($moreitems){
-            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
+            $resumptionToken = OAIPMHUtils::constructResumptionToken($this->reqParams, $offset, $cursor);
             $this->setResponseParam("resumptionToken", $resumptionToken);
         }
         else{
