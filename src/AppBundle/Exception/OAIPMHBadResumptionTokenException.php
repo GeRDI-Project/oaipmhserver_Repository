@@ -12,7 +12,7 @@ class OAIPMHBadResumptionTokenException extends OAIPMHException
     public function __construct()
     {
         parent::__construct();
-        $this->setReason("Bad resumptionToken or Database Error");
+        $this->setReason("Bad resumptionToken");
         $this->setErrorCode("badResumptionToken");
     }
 }

@@ -9,11 +9,12 @@
 namespace AppBundle\Utils;
 
 use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
+use AppBundle\Exception\OAIPMHBadArgumentException;
+use AppBundle\Entity\ResumptionToken;
 use AppBundle\Utils\OAIPMHUtils;
 use AppBundle\Utils\OAIPMHVerb;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
-use AppBundle\Entity\ResumptionToken;
 use \DateTime;
 // use Ramsey\Uuid\Uuid;
 // use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
@@ -41,9 +42,12 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
             $tokendata=OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken']);
-            $this->reqParams = array_merge($this->reqParams,$tokendata[0]);
-            $offset=$tokendata[1];
-            $cursor=$tokendata[2]+$this->getThreshold();
+            $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
+            $offset=$tokendata["offset"];
+            $cursor=intval($tokendata["cursor"])+$this->getThreshold();
+            if (in_array(null, $reqParams, true) || in_array('', $reqParams, true)) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
             $this->setResponseParam("resumptionToken", "");
         }
 
@@ -54,7 +58,6 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
 
         for($i=0;$i<count($items);$i++){
-            //print("Neuer Lauf ".$i);
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
             }

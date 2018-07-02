@@ -295,20 +295,20 @@ class OAIPMHUtils
      *
      * @param String $resumptionToken
      *
-     * @return array of paramters for query
+     * @return array of paramters for query: [params, offset, cursor]
      */
     public static function parse_resumptionToken(String $resumptionToken)
     {
         //print("Token : ".$resumptionToken);
         $token=OAIPMHUtils::base64url_decode($resumptionToken);
-        //print("decoded : ".$token);
         $params_token = explode('-', $token);
+        if(sizeof($params_token)%2!=0){
+            throw new OAIPMHBadResumptionTokenException();
+        }
         for($i = 4; $i < count($params_token)-1 ; $i += 2){
 -            $params[$params_token[$i]]=$params_token[$i+1];
         }
-        //var_dump($params);
-        //print("Offset hier ist ".$params_token[1]);
-        return array($params, $params_token[1], $params_token[3]);
+        return array("params" => $params, "offset" => $params_token[1], "cursor" => $params_token[3]);
     }
 
     /**
