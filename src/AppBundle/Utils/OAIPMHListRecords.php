@@ -27,7 +27,6 @@ class OAIPMHListRecords extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        //$retRecords = array();
         $offset           = 0;
         $completeListSize = 0;
         $cursor           = 0;
