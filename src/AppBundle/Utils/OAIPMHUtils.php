@@ -300,7 +300,7 @@ class OAIPMHUtils
     public static function parseResumptionToken(String $resumptionToken)
     {
         $token = OAIPMHUtils::base64url_decode($resumptionToken);
-        if(preg_match("/^[a-zA-Z0-9-]/", $token)===False) {
+        if(preg_match("/^offset-\d-cursor-\d-[a-zA-Z0-9_-]/", $token)) {
             throw new OAIPMHBadResumptionTokenException();
         }
         $paramsToken = explode('-', $token);
@@ -310,7 +310,7 @@ class OAIPMHUtils
         for($i = 4; $i < count($paramsToken)-1 ; $i += 2){
 -            $params[$paramsToken[$i]]=$paramsToken[$i+1];
         }
-        return array("params" => $params, "offset" => $params_token[1], "cursor" => $paramsToken[3]);
+        return array("params" => $params, "offset" => $paramsToken[1], "cursor" => $paramsToken[3]);
     }
 
     /**
