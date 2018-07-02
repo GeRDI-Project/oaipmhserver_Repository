@@ -299,19 +299,18 @@ class OAIPMHUtils
      */
     public static function parseResumptionToken(String $resumptionToken)
     {
-        $token        = OAIPMHUtils::base64url_decode($resumptionToken);
+        $token = OAIPMHUtils::base64url_decode($resumptionToken);
         if(preg_match("/^[a-zA-Z0-9-]/", $token)===False) {
             throw new OAIPMHBadResumptionTokenException();
         }
-        $params_token = explode('-', $token);
-        
-        if(sizeof($params_token)%2!=0){
+        $paramsToken = explode('-', $token);
+        if(sizeof($paramsToken)%2!=0){
             throw new OAIPMHBadResumptionTokenException();
         }
-        for($i = 4; $i < count($params_token)-1 ; $i += 2){
--            $params[$params_token[$i]]=$params_token[$i+1];
+        for($i = 4; $i < count($paramsToken)-1 ; $i += 2){
+-            $params[$paramsToken[$i]]=$paramsToken[$i+1];
         }
-        return array("params" => $params, "offset" => $params_token[1], "cursor" => $params_token[3]);
+        return array("params" => $params, "offset" => $params_token[1], "cursor" => $paramsToken[3]);
     }
 
     /**
