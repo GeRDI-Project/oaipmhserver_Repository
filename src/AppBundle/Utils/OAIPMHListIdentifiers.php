@@ -28,7 +28,6 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        //$retItems = array();
         $offset           = 0;
         $completeListSize = 0;
         $cursor           = 0;
