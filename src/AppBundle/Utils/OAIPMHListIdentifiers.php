@@ -9,16 +9,12 @@
 namespace AppBundle\Utils;
 
 use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
-use AppBundle\Exception\OAIPMHBadArgumentException;
-use AppBundle\Entity\ResumptionToken;
+use AppBundle\Exception\OAIPMHBadResumptionTokenException;
 use AppBundle\Utils\OAIPMHUtils;
 use AppBundle\Utils\OAIPMHVerb;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
 use \DateTime;
-// use Ramsey\Uuid\Uuid;
-// use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
-
 
 class OAIPMHListIdentifiers extends OAIPMHParamVerb
 {
@@ -44,7 +40,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
             $tokendata=OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken']);
             $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
             $offset=$tokendata["offset"];
-            $cursor=intval($tokendata["cursor"])+$this->getThreshold();
+            $cursor=$tokendata["cursor"]+$this->getThreshold();
             if (in_array(null, $reqParams, true) || in_array('', $reqParams, true)) {
                 throw new OAIPMHBadResumptionTokenException();
             }

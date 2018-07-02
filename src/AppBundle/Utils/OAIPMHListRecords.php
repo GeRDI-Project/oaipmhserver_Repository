@@ -10,7 +10,9 @@ namespace AppBundle\Utils;
 use AppBundle\Utils\OAIPMHVerb;
 use AppBundle\Utils\OAIPMHUtils;
 use AppBundle\Exception\OAIPMHCannotDisseminateFormatException;
+use AppBundle\Exception\OAIPMHBadResumptionTokenException;
 use Doctrine\Common\Persistence\ObjectManager;
+use \DateTime;
 
 class OAIPMHListRecords extends OAIPMHParamVerb
 {
@@ -25,54 +27,71 @@ class OAIPMHListRecords extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $items = $this->em
-           ->getRepository('AppBundle:Item')
-           ->findAll();
-
         $retRecords = array();
         $offset = 0;
-        $completeListSize = 0;
+        $completeListSize=0;
+        $cursor=0;
+        $moreitems =false;
 
-        // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
+         // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
         if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $this->reqParams = array_merge($this->reqParams, (OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken'], $this->em)));
+            $tokendata=OAIPMHUtils::parse_resumptionToken($this->reqParams['resumptionToken']);
+            $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
+            $offset=$tokendata["offset"];
+            $cursor=$tokendata["cursor"]+$this->getThreshold();
+            if (in_array(null, $reqParams, true) || in_array('', $reqParams, true)) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
             $this->setResponseParam("resumptionToken", "");
         }
 
-        foreach ($items as $item) {
-            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($item, $this->reqParams)) {
+        $items = $this->em
+           ->getRepository('AppBundle:Item')
+           ->->getNitems($offset,"5");
+
+        
+
+        for($i=0;$i<count($items);$i++){
+            if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
             }
             //check whether metadataPrefix is available for item
-            foreach ($item->getRecords() as $record) {
+            foreach ($items[$i]->getRecords() as $record) {
                 if ($record->getMetadataFormat()->getMetadataPrefix()
                     == $this->reqParams["metadataPrefix"]) {
                     $retRecords[] = $record;
                 }
             }
+            if (count($retRecords)>$this->getThreshold()){
+                array_pop($retRecords);
+                $moreitems=true;
+                $offset+=$i;
+                break;
+            }
         }
 
-        $completeListSize=count($retRecords);
+        $timestamp = new DateTime();
+        $timestamp->modify('+1 hour');
 
-        if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $offset = OAIPMHUtils::getoffset_resumptionToken($this->reqParams['resumptionToken'], $this->em);
-            $retRecords = array_slice($retRecords, intval($offset)*$this->getThreshold());
+
+        if($moreitems){
+            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $cursor);
+            $this->setResponseParam("resumptionToken", $resumptionToken);
+        }
+        else{
+            // correct completeListSize to actual Size
+            $completeListSize=$cursor+count($retRecords);
         }
 
         if (count($retRecords) == 0) {
             throw new OAIPMHCannotDisseminateFormatException();
         }
 
-        if (count($retRecords) > $this->getThreshold()){
-            $retRecords = array_slice($retRecords, 0, $this->getThreshold(), $preserve_keys = TRUE);
-            $resumptionToken = OAIPMHUtils::construct_resumptionToken($this->reqParams, $offset, $this->em);
-            $this->setResponseParam("resumptionToken", $resumptionToken);
-        }
-
         // Attributes for resumptionToken
         if (array_key_exists("resumptionToken", $this->responseParams)){
             $this->setResponseParam("completeListSize", $completeListSize);
-            $this->setResponseParam("cursor", intval($offset)*$this->getThreshold());
+            $this->setResponseParam("cursor", $cursor);
+            $this->setResponseParam("expirationDate", $timestamp->format('Y-m-d H:i:sP'));
         }
         
         $this->setResponseParam("records", $retRecords);
