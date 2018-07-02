@@ -18,8 +18,9 @@ class ItemRepository extends \Doctrine\ORM\EntityRepository
 	public function getItemsOffset(String $offset)
     {
     	$querytext='SELECT u FROM AppBundle:Item u';
-    	$query=$this->_em->createQuery($querytext);
-    	$query->setFirstResult($offset);
-        return $query->getResult();
+    	return $this->getEntityManager()
+		  ->createQuery($querytext)
+		  ->setFirstResult($offset)
+		  ->getResult();
        }
 }

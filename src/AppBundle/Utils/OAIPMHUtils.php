@@ -299,8 +299,12 @@ class OAIPMHUtils
      */
     public static function parseResumptionToken(String $resumptionToken)
     {
-        $token=OAIPMHUtils::base64url_decode($resumptionToken);
+        $token        = OAIPMHUtils::base64url_decode($resumptionToken);
+        if(preg_match("/^[a-zA-Z0-9-]/", $token)===False) {
+            throw new OAIPMHBadResumptionTokenException();
+        }
         $params_token = explode('-', $token);
+        
         if(sizeof($params_token)%2!=0){
             throw new OAIPMHBadResumptionTokenException();
         }
@@ -311,9 +315,9 @@ class OAIPMHUtils
     }
 
     /**
-     * Construct resumptionToken from parameters for query, replace later with Database insert
+     * Construct resumptionToken from parameters for query
      *
-     * @param Array reqParams, String $offset
+     * @param Array reqParams, String $offset, String Cursor
      *
      * @return String $resumptionToken
      */
