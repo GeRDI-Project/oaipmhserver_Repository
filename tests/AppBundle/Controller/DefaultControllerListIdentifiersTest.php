@@ -248,26 +248,4 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
             "Answer does not include exactly one error tag with code 'noSetHierarchy'"
         );
     }
-
-    /**
-     *  Test size of resumptionToken
-     *  length of array generated from resumptionToken must be even
-     */
-    public function testListIdentifiersNoSetHierarchy()
-    {
-        $queryData = array(
-            'verb'  => "ListIdentifiers",
-            'resumptionToken' => 'oai_dc',
-            'set' => 'setTag',
-        );
-        $contents = $this->getGetAndPost("/", $queryData);
-        $this->genericResponseCheck($contents);
-        $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="noSetHierarchy"]',
-                $contents
-            ),
-            "Answer does not include exactly one error tag with code 'noSetHierarchy'"
-        );
-    }
 }
