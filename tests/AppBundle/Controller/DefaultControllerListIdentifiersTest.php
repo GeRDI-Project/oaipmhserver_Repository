@@ -134,10 +134,10 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
         $this->genericResponseCheck($contents);
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
-                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
+                '/o:OAI-PMH/o:error[@code="badArgument"]',
                 $contents
             ),
-            "Answer does not include exactly one error tag with code 'badResumptionToken'"
+            "Answer does not include exactly one error tag with code 'badArgument'"
         );
     }
 
