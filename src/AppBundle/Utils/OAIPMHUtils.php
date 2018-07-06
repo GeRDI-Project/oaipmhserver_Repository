@@ -8,7 +8,6 @@
 namespace AppBundle\Utils;
 
 use AppBundle\Entity\Item;
-use AppBundle\Entity\ResumptionToken;
 use AppBundle\Exception\OAIPMHBadArgumentException;
 use AppBundle\Exception\OAIPMHBadVerbException;
 use AppBundle\Exception\OAIPMHException;
@@ -16,9 +15,6 @@ use AppBundle\Exception\OAIPMHNoSetHierarchyException;
 use AppBundle\Exception\OAIPMHBadResumptionTokenException;
 use AppBundle\Utils\OAIPMHVerb;
 use Symfony\Component\Debug\Exception\HandledErrorException;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\Common\Persistence\ObjectRepository;
-use Doctrine\ORM\EntityManager;
 use \Exception;
 use \DateTime;
 
