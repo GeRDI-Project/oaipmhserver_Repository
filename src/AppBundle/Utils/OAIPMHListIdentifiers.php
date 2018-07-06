@@ -28,7 +28,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $moreitems        = false;
+        $moreitems = false;
         $tokenData = OAIPMHUtils::parseResumptionToken($this->reqParams);
         $this->reqParams = $tokenData["reqParams"];
 
@@ -38,6 +38,7 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
 
         $retItems = array();
         for ($i=0; $i<count($items); $i++) {
+            // check whether item is in time range
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
             }
@@ -48,11 +49,11 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                     $retItems[] = $items[$i];
                 }
             }
+            //There are more items to be delivered with resumptionToken
             if (count($retItems) > OAIPMHVerb::THRESHOLD) {
                 array_pop($retItems);
                 $moreitems=true;
                 $tokenData["offset"]+=$i;
-
                 break;
             }
         }
@@ -65,8 +66,6 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                 "resumptionToken",
                 OAIPMHUtils::constructResumptionToken($this->reqParams, $tokenData["offset"], $tokenData["cursor"])
             );
-        } else {
-
         }
 
         if (count($retItems) == 0) {
