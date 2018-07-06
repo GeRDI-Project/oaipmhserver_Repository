@@ -14,6 +14,7 @@ use AppBundle\Exception\OAIPMHBadVerbException;
 use AppBundle\Exception\OAIPMHException;
 use AppBundle\Exception\OAIPMHNoSetHierarchyException;
 use AppBundle\Exception\OAIPMHBadResumptionTokenException;
+use AppBundle\Utils\OAIPMHVerb;
 use Symfony\Component\Debug\Exception\HandledErrorException;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
@@ -29,16 +30,6 @@ use \DateTime;
  */
 class OAIPMHUtils
 {
-    public static function base64url_encode($data) { 
-        //print("Hallo Aufruf");
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '='); 
-        //print("Blasentee");
-    }
-    
-    public static function base64url_decode($data) {
-        return base64_decode(strtr($data, '-_', '+/'));
-    }
-
     /**
      * Checks whether items timestamp matches the until/from selection
      *
@@ -297,20 +288,35 @@ class OAIPMHUtils
      *
      * @return array of paramters for query: [params, offset, cursor]
      */
-    public static function parseResumptionToken(String $resumptionToken)
+    public static function parseResumptionToken(array $reqParams)
     {
-        $token = OAIPMHUtils::base64url_decode($resumptionToken);
-        if(preg_match("/^offset-\d-cursor-\d-[a-zA-Z0-9_-]/", $token)) {
-            throw new OAIPMHBadResumptionTokenException();
+        $dummyRetval = array(
+            "reqParams" => $reqParams,
+            "offset" => 0,
+            "cursor" => 0
+        );
+
+        if (array_key_exists("resumptionToken", $reqParams)) {
+            $tokenArray = json_decode(urldecode($reqParams["resumptionToken"]), true);
+            //Invalid resumptionToken?
+            if ($tokenArray === null) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
+            if (sizeof(array_diff_key($dummyRetval, $tokenArray)) != 0) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
+            //Set blank resumptionToken, if necessary new one will be created
+            $reqParams["resumptionToken"] = "";
+            $tokenArray["reqParams"] = array_merge(
+                $tokenArray["reqParams"],
+                $reqParams
+            );
+            $tokenArray["cursor"] += OAIPMHVerb::THRESHOLD;
+            return $tokenArray;
         }
-        $paramsToken = explode('-', $token);
-        if(sizeof($paramsToken)%2!=0){
-            throw new OAIPMHBadResumptionTokenException();
-        }
-        for($i = 4; $i < count($paramsToken)-1 ; $i += 2){
--            $params[$paramsToken[$i]]=$paramsToken[$i+1];
-        }
-        return array("params" => $params, "offset" => $paramsToken[1], "cursor" => $paramsToken[3]);
+
+        return $dummyRetval;
+
     }
 
     /**
@@ -320,17 +326,15 @@ class OAIPMHUtils
      *
      * @return String $resumptionToken
      */
-    public static function constructResumptionToken(array $reqParams, String $offset, int $cursor)
-    {
-        $query = "";
-        for($i=1; $i<count($reqParams); $i+=1){
-            if (array_keys($reqParams)[$i] == "resumptionToken") { continue; }
-            $query = $query."-".array_keys($reqParams)[$i];
-            $query = $query."-".array_values($reqParams)[$i];
-        }
-        $query="offset-".$offset."-cursor-".$cursor.$query;
-        $token=OAIPMHUtils::base64url_encode($query);
-
-        return $token;
+    public static function constructResumptionToken(
+        array $reqParams,
+        String $offset,
+        int $cursor
+    ) {
+        return urlencode(json_encode([
+            "reqParams" => $reqParams,
+            "offset"    => $offset,
+            "cursor"    => $cursor
+        ]));
     }
 }

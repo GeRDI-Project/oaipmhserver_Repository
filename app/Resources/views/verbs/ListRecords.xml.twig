@@ -13,7 +13,7 @@
     </record>
 {% endfor %}
 {% if resumptionToken is defined %}
- <resumptionToken completeListSize="{{completeListSize}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
+ <resumptionToken expirationDate="{{expirationDate}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
 {% endif %}
   </ListRecords>
 {% endblock %}

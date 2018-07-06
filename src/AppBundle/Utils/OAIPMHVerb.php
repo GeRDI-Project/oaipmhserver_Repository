@@ -12,6 +12,11 @@ use Doctrine\Common\Persistence\ObjectManager;
 abstract class OAIPMHVerb
 {
     /**
+     * @var size of chunks returned by ListIdentifiers and ListRecords
+     */
+    const THRESHOLD = 20;
+
+    /**
      * @var String
      */
     protected $name;
@@ -21,11 +26,6 @@ abstract class OAIPMHVerb
      */
     protected $responseParams;
 
-    /**
-     * @var Number of return items in a single response, further items with resumptionToken
-     * Magic Number, @todo find a better place (config?)
-     */
-    protected $threshold = 10;
 
     /**
      * @var Doctrine\ORM\EntityManager
@@ -98,12 +98,4 @@ abstract class OAIPMHVerb
      * @return OAIPMHVerb
      */
     abstract public function retrieveResponseParams();
-
-    /**
-     * Returns how many items max in one response, further items with resumptionTokens
-     */
-     public function getThreshold()
-     {
-        return $this->threshold;
-     } 
 }

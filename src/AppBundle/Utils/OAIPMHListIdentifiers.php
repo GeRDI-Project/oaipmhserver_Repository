@@ -28,27 +28,16 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
      */
     public function retrieveResponseParams()
     {
-        $offset           = 0;
-        $completeListSize = 0;
-        $cursor           = 0;
         $moreitems        = false;
-
-        // check whether resumptionToken is avaiable, apply arguments encoded in resumptionToken
-        if (array_key_exists("resumptionToken", $this->reqParams)) {
-            $tokendata=OAIPMHUtils::parseResumptionToken($this->reqParams['resumptionToken']);
-            $this->reqParams = array_merge($this->reqParams,$tokendata["params"]);
-            $offset          = $tokendata["offset"];
-            $cursor          = $tokendata["cursor"]+$this->getThreshold();
-            $this->setResponseParam("resumptionToken", "");
-        }
+        $tokenData = OAIPMHUtils::parseResumptionToken($this->reqParams);
+        $this->reqParams = $tokenData["reqParams"];
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getItemsOffset($offset);
-        $completeListSize=count($items)+$offset;
+           ->getItemsOffset($tokenData["offset"]);
 
-
-        for($i=0;$i<count($items);$i++){
+        $retItems = array();
+        for ($i=0; $i<count($items); $i++) {
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
             }
@@ -59,10 +48,11 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
                     $retItems[] = $items[$i];
                 }
             }
-            if (count($retItems)>$this->getThreshold()){
+            if (count($retItems) > OAIPMHVerb::THRESHOLD) {
                 array_pop($retItems);
                 $moreitems=true;
-                $offset+=$i;
+                $tokenData["offset"]+=$i;
+
                 break;
             }
         }
@@ -70,20 +60,23 @@ class OAIPMHListIdentifiers extends OAIPMHParamVerb
         $timestamp = new DateTime();
         $timestamp->modify('+1 hour');
 
-        if($moreitems){
-            $resumptionToken = OAIPMHUtils::constructResumptionToken($this->reqParams, $offset, $cursor);
-            $this->setResponseParam("resumptionToken", $resumptionToken);
+        if ($moreitems) {
+            $this->setResponseParam(
+                "resumptionToken",
+                OAIPMHUtils::constructResumptionToken($this->reqParams, $tokenData["offset"], $tokenData["cursor"])
+            );
+        } else {
+
         }
-        else{
-            // correct completeListSize to actual Size
-            $completeListSize=$cursor+count($retItems);
+
+        if (count($retItems) == 0) {
+            throw new OAIPMHCannotDisseminateFormatException();
         }
 
         // Attributes for resumptionToken
-        if (array_key_exists("resumptionToken", $this->responseParams)){
-            $this->setResponseParam("completeListSize", $completeListSize);
-            $this->setResponseParam("cursor", $cursor);
-            $this->setResponseParam("expirationDate", $timestamp->format('Y-m-d H:i:sP'));
+        if (array_key_exists("resumptionToken", $this->responseParams)) {
+            $this->setResponseParam("cursor", $tokenData["cursor"]);
+            $this->setResponseParam("expirationDate", $timestamp->format(DateTime::ATOM));
         }
 
         $this->setResponseParam("items", $retItems);
