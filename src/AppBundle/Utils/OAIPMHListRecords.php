@@ -33,7 +33,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
 
         $items = $this->em
            ->getRepository('AppBundle:Item')
-           ->getItemsOffset($offset);
+           ->getItemsOffset($tokenData["offset"]);
 
         $retItems = array();
         for($i=0;$i<count($items);$i++){
