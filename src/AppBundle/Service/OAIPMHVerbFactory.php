@@ -69,7 +69,7 @@ class OAIPMHVerbFactory
                 return new OAIPMHGetRecord($this->em, $params, $item);
                 break;
             case "ListIdentifiers":
-                $listIdentifiers = new OAIPMHListIdentifiers($this->em, $params, $params);
+                $listIdentifiers = new OAIPMHListIdentifiers($this->em, $params);
                 $listIdentifiers->setResponseParam("baseUrl", $baseUrl);
                 return $listIdentifiers;
                 break;
