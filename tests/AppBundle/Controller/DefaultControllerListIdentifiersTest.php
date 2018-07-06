@@ -10,8 +10,9 @@ namespace AppBundle\Tests\Controller;
 class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractTest
 {
 /**
-     * Test a valid minimal ListIdentifiers request for which 3 items are in the
-     * test database
+     * Test a valid minimal ListIdentifiers request for which 20 items 
+     * (the threshold of one response chunk, more items with resumptionToken) 
+     * are in the test database
      */
     public function testListIdentifiersMin()
     {
@@ -25,7 +26,7 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
             $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListIdentifiers/o:header',
                 $contents,
-                3
+                20
             ),
             "Answer does not include exactly three header tags"
         );

@@ -35,7 +35,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
            ->getRepository('AppBundle:Item')
            ->getItemsOffset($tokenData["offset"]);
 
-        $retItems = array();
+        $retRecords[] = array();
         for($i=0;$i<count($items);$i++){
             // check whether item is in time range
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
@@ -73,7 +73,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
 
         // Attributes for resumptionToken
         if (array_key_exists("resumptionToken", $this->responseParams)){
-            $this->setResponseParam("cursor", $cursor);
+            $this->setResponseParam("cursor", $tokenData["cursor"]);
             $this->setResponseParam("expirationDate", $timestamp->format(DateTime::ATOM));
         }
         
