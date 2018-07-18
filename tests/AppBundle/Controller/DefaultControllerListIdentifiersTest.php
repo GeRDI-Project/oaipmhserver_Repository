@@ -28,7 +28,7 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
                 $contents,
                 20
             ),
-            "Answer does not include exactly three header tags"
+            "Answer does not include exactly twenty header tags"
         );
     }
 
@@ -47,11 +47,12 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
+            $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListIdentifiers/o:header',
-                $contents
+                $contents,
+                18
             ),
-            "Answer does not include exactly one header tag"
+            "Answer does not include exactly eighteen header tag"
         );
     }
 
@@ -64,7 +65,7 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
         $queryData = array(
             'verb'  => "ListIdentifiers",
             'metadataPrefix' => 'oai_dc',
-            'from'  => '2017-09-09T12:00:00Z',
+            'from'  => '2018-07-01T12:00:00Z',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -72,7 +73,7 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
             $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListIdentifiers/o:header',
                 $contents,
-                2
+                1
             ),
             "Answer does not include exactly two header tags"
         );
@@ -177,6 +178,27 @@ class DefaultControllerListIdentifiersMinTest extends DefaultControllerAbstractT
         $this->assertTrue(
             $this->checkXpathReturnsExactlyOne(
                 '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
+                $contents
+            ),
+            "Invalid resumptionToken"
+        );
+    }
+
+
+    /**
+     * Test with a valid resumptionToken
+     */
+    public function testListIdentifiersValidResumptionToken()
+    {
+        $queryData = array(
+            'verb' => 'ListIdentifiers',
+            'resumptionToken' => '{"reqParams"%3A{"verb"%3A"ListIdentifiers"%2C"metadataPrefix"%3A"oai_dc"}%2C"offset"%3A"21"%2C"cursor"%3A0}',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListIdentifiers/o:header',
                 $contents
             ),
             "Invalid resumptionToken"

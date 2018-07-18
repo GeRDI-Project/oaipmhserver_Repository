@@ -35,8 +35,8 @@ class OAIPMHListRecords extends OAIPMHParamVerb
            ->getRepository('AppBundle:Item')
            ->getItemsOffset($tokenData["offset"]);
 
-        $retRecords[] = array();
-        for($i=0;$i<count($items);$i++){
+        $retRecords = array();
+        for ($i=0; $i<count($items); $i++) {
             // check whether item is in time range
             if (!OAIPMHUtils::isItemTimestampInsideDateSelection($items[$i], $this->reqParams)) {
                 continue;
@@ -52,7 +52,7 @@ class OAIPMHListRecords extends OAIPMHParamVerb
             if (count($retRecords) > OAIPMHVerb::THRESHOLD){
                 array_pop($retRecords);
                 $moreitems=true;
-                $offset+=$i;
+                $tokenData["offset"]+=$i;
                 break;
             }
         }

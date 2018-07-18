@@ -25,9 +25,9 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
             $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListRecords/o:record',
                 $contents,
-                3
+                20
             ),
-            "Answer does not include exactly three record tags"
+            "Answer does not include exactly twenty record tags"
         );
     }
 
@@ -46,11 +46,12 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
         $this->assertTrue(
-            $this->checkXpathReturnsExactlyOne(
+            $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListRecords/o:record',
-                $contents
+                $contents,
+                18
             ),
-            "Answer does not include exactly one record tag"
+            "Answer does not include exactly eighteen record tag"
         );
     }
 
@@ -63,7 +64,7 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
         $queryData = array(
             'verb'  => "ListRecords",
             'metadataPrefix' => 'oai_dc',
-            'from'  => '2017-09-09T12:00:00Z',
+            'from'  => '2018-07-01T12:00:00Z',
         );
         $contents = $this->getGetAndPost("/", $queryData);
         $this->genericResponseCheck($contents);
@@ -71,7 +72,7 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
             $this->checkXpathReturnsExactly(
                 '/o:OAI-PMH/o:ListRecords/o:record',
                 $contents,
-                2
+                1
             ),
             "Answer does not include exactly two record tags"
         );
@@ -159,6 +160,47 @@ class DefaultControllerListRecordsTest extends DefaultControllerAbstractTest
                 $contents
             ),
             "Answer does not include exactly one error tag with code 'badArgument'"
+        );
+    }
+
+    /**
+     * Test with an invalid resumptionToken
+     */
+    public function testListRecordsBadResumptionToken()
+    {
+        $queryData = array(
+            'verb' => 'ListRecords',
+            'resumptionToken' => 'token123',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:error[@code="badResumptionToken"]',
+                $contents
+            ),
+            "Invalid resumptionToken"
+        );
+    }
+
+
+    /**
+     * Test with a valid resumptionToken
+     */
+    public function testListRecordsValidResumptionToken()
+    {
+        $queryData = array(
+            'verb' => 'ListRecords',
+            'resumptionToken' => '{"reqParams"%3A{"verb"%3A"ListRecords"%2C"metadataPrefix"%3A"oai_dc"}%2C"offset"%3A"21"%2C"cursor"%3A0}',
+        );
+        $contents = $this->getGetAndPost("/", $queryData);
+        $this->genericResponseCheck($contents);
+        $this->assertTrue(
+            $this->checkXpathReturnsExactlyOne(
+                '/o:OAI-PMH/o:ListRecords/o:record',
+                $contents
+            ),
+            "Invalid resumptionToken"
         );
     }
 }
