@@ -12,6 +12,11 @@ use Doctrine\Common\Persistence\ObjectManager;
 abstract class OAIPMHVerb
 {
     /**
+     * @var size of chunks returned by ListIdentifiers and ListRecords
+     */
+    const THRESHOLD = 20;
+
+    /**
      * @var String
      */
     protected $name;
@@ -20,6 +25,7 @@ abstract class OAIPMHVerb
      * @var array Parameters of OAI-PMH response
      */
     protected $responseParams;
+
 
     /**
      * @var Doctrine\ORM\EntityManager

@@ -13,6 +13,7 @@ use AppBundle\Exception\OAIPMHBadVerbException;
 use AppBundle\Exception\OAIPMHException;
 use AppBundle\Exception\OAIPMHNoSetHierarchyException;
 use AppBundle\Exception\OAIPMHBadResumptionTokenException;
+use AppBundle\Utils\OAIPMHVerb;
 use Symfony\Component\Debug\Exception\HandledErrorException;
 use \Exception;
 use \DateTime;
@@ -232,11 +233,6 @@ class OAIPMHUtils
             throw new OAIPMHNoSetHierarchyException();
         }
 
-        //Check for a resumptionToken (not supported yet)
-        if (isset($params["resumptionToken"])) {
-            throw new OAIPMHBadResumptionTokenException();
-        }
-
         foreach ($params as $key => $value) {
             if (!OAIPMHUtils::paramIsAllowedForVerb($key, $params['verb'])) {
                 $badArgument = new OAIPMHBadArgumentException();
@@ -278,5 +274,63 @@ class OAIPMHUtils
             }
         }
         return false;
+    }
+
+
+    /**
+     * Translate resumptionToken in query parameters
+     *
+     * @param String $resumptionToken
+     *
+     * @return array of paramters for query: [params, offset, cursor]
+     */
+    public static function parseResumptionToken(array $reqParams)
+    {
+        $dummyRetval = array(
+            "reqParams" => $reqParams,
+            "offset" => 0,
+            "cursor" => 0
+        );
+
+        if (array_key_exists("resumptionToken", $reqParams)) {
+            $tokenArray = json_decode(urldecode($reqParams["resumptionToken"]), true);
+            //Invalid resumptionToken?
+            if ($tokenArray === null) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
+            if (sizeof(array_diff_key($dummyRetval, $tokenArray)) != 0) {
+                throw new OAIPMHBadResumptionTokenException();
+            }
+            //Set blank resumptionToken, if necessary new one will be created
+            $reqParams["resumptionToken"] = "";
+            $tokenArray["reqParams"] = array_merge(
+                $tokenArray["reqParams"],
+                $reqParams
+            );
+            $tokenArray["cursor"] += OAIPMHVerb::THRESHOLD;
+            return $tokenArray;
+        }
+
+        return $dummyRetval;
+
+    }
+
+    /**
+     * Construct resumptionToken from parameters for query
+     *
+     * @param Array reqParams, String $offset, String Cursor
+     *
+     * @return String $resumptionToken
+     */
+    public static function constructResumptionToken(
+        array $reqParams,
+        String $offset,
+        int $cursor
+    ) {
+        return urlencode(json_encode([
+            "reqParams" => $reqParams,
+            "offset"    => $offset,
+            "cursor"    => $cursor
+        ]));
     }
 }

@@ -12,5 +12,8 @@
         </metadata>
     </record>
 {% endfor %}
+{% if resumptionToken is defined %}
+ <resumptionToken expirationDate="{{expirationDate}}" cursor="{{cursor}}">{{resumptionToken}}</resumptionToken>
+{% endif %}
   </ListRecords>
 {% endblock %}

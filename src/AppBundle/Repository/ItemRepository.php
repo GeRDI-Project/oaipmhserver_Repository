@@ -15,4 +15,12 @@ namespace AppBundle\Repository;
  */
 class ItemRepository extends \Doctrine\ORM\EntityRepository
 {
+	public function getItemsOffset(String $offset)
+    {
+    	$querytext='SELECT u FROM AppBundle:Item u';
+    	return $this->getEntityManager()
+		  ->createQuery($querytext)
+		  ->setFirstResult($offset)
+		  ->getResult();
+       }
 }
