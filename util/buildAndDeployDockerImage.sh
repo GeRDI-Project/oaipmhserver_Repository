@@ -17,7 +17,7 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "master" ]
 then
     dockerRegistry="docker-registry.gerdi.research.lrz.de:5043"
-    imageName="archive/oaipmhserver"
+    imageName="repository/oaipmhserver"
     imageUrl="${dockerRegistry}/${imageName}"
 
     docker build -t "${imageUrl}:latest" .
