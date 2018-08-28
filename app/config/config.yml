@@ -42,7 +42,7 @@ twig:
 
 # Doctrine Configuration
 doctrine:
-    dbal: 
+    dbal:
         driver: pdo_sqlite
         path: '%kernel.project_dir%/production.db'
         charset: UTF8
