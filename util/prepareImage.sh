@@ -30,6 +30,6 @@ php composer.phar install
 #php composer.phar update
 #echo '-----Updated composer-----'
 
-#su -c '/var/www/bin/console cache:clear --env=prod' www-data
-#su -c '/var/www/bin/console cache:warmup --env=prod' www-data
+/var/www/bin/console cache:clear --env=prod
+/var/www/bin/console cache:warmup --env=prod
 

@@ -33,6 +33,10 @@ framework:
     templating:
         engines: ['twig']
 
+sensio_framework_extra:
+    router:
+        annotations: false
+
 # Twig Configuration
 twig:
     debug: '%kernel.debug%'
@@ -74,3 +78,7 @@ assetic:
     use_controller: true
     filters:
         cssrewrite: ~
+
+services:
+    Symfony\Bundle\AsseticBundle\AsseticBundle:
+        public: true

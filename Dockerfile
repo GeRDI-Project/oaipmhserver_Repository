@@ -17,10 +17,7 @@ ADD app/config/config.yml.deploy /var/www/app/config/config.yml
 
 RUN chown -R www-data:www-data /var/www
 
+RUN /var/www/util/prepareImage.sh
 
-RUN su -c /var/www/util/prepareImage.sh www-data
-
-RUN su -c '/var/www/bin/console cache:clear --env=prod' www-data
-RUN su -c '/var/www/bin/console cache:warmup --env=prod' www-data
 
 
