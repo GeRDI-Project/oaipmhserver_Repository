@@ -15,6 +15,8 @@
 
 #sed -i 's#/var/www/html#/app/web#g' /etc/apache2/sites-available/000-default.conf
 #sed -i 's#/var/www#/app/web#g' /etc/apache2/apache2.conf
+
+chown -R www-data:www-data /var/www
 rm -r /var/www/html
 ln -s /var/www/web/ /var/www/html
 cd /var/www
@@ -23,13 +25,6 @@ php -r "if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece38
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
 php composer.phar install
-#php composer.phar require symfony/assetic-bundle
-
-
-#echo '-----installed composer-----'
-#php composer.phar update
-#echo '-----Updated composer-----'
-
 /var/www/bin/console cache:clear --env=prod
 /var/www/bin/console cache:warmup --env=prod
 
