@@ -20,3 +20,13 @@ monolog:
         console:
             type: console
             process_psr_3_messages: false
+framework:
+    templating:
+        engines: ['twig']
+
+# Assetic Configuration
+assetic:
+    debug:          '%kernel.debug%'
+    use_controller: true
+    filters:
+        cssrewrite: ~
