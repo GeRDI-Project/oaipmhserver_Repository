@@ -29,6 +29,8 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
+    Symfony\Bundle\AsseticBundle\AsseticBundle:
+        public: true
     # add more services, or override services that need manual wiring
     # AppBundle\Service\ExampleService:
     #     arguments:
